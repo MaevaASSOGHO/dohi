@@ -91,6 +91,20 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-black text-neutral-100">
       {/* Topbar logo (inchangé) */}
+      <div className="fixed inset-x-0 top-0 z-40 flex justify-center pointer-events-none">
+        <Link
+          to="/feed"
+          className="pointer-events-auto py-3 opacity-95 hover:opacity-100 transition"
+          aria-label="Aller au fil d’actualité"
+        >
+          
+          <img
+            src="/Dohi-logo2.png"
+            alt="OS Scammer"
+            className="w-auto sm:h-24"
+          />
+        </Link>
+      </div>
 
       <div className={`pt-16 ${CONTENT_MAX_W} mx-auto px-4 sm:px-6 md:px-8`}>
         <div className="flex gap-6">
@@ -123,10 +137,7 @@ export default function App() {
                   }`}
                 >
                   {/* Icône logout */}
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden>
-                    <path d="M12 3h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-6" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M15 12H4m0 0 3-3m-3 3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  
                   <span>Se déconnecter</span>
                 </button>
               )}
