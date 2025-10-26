@@ -1,0 +1,72 @@
+/* Nettoyage du boilerplate Vite, on garde simple.
+   Tout le layout/spacing est géré par Tailwind dans App.jsx. */
+
+/* --- Hauteur et fond noirs globaux, suppression des marges par défaut --- */
+html, body, #root {
+  height: 100%;
+  background: #000;
+}
+body { margin: 0; }
+
+/* --- Le shell occupe tout l’écran (utile si tu changes la structure) --- */
+.app-shell {
+  min-height: 100dvh; /* prend toute la hauteur de l’écran */
+  background: #000;
+  color: #e5e7eb; /* text-neutral-200 approximatif */
+}
+
+/* --- Forcer le panneau de contenu à s’étirer en hauteur --- */
+#app-main {            /* le <main> englobant */
+  min-height: calc(100dvh - 4rem); /* 4rem ≈ barre du haut de 64px */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ce wrapper entoure <Outlet/> pour que l’enfant prenne toute la hauteur */
+.outlet-stretcher {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Le premier enfant (ta page) s’étire sur la hauteur restante */
+.outlet-stretcher > * {
+  flex: 1;
+  min-height: 100%;
+}
+
+/* Optionnel : éviter que certains containers internes rétrécissent trop */
+.fill-viewport {
+  min-height: 100%;
+}
+
+/* Si certaines pages avaient un fond différent, on force un fond noir */
+.page-surface {
+  background: rgba(10,10,10,0.6);
+  backdrop-filter: blur(2px);
+  border: 1px solid #262626; /* neutral-800 */
+  border-radius: 1rem;        /* rounded-2xl */
+}
+
+
+/* Petite barre visuelle pour le bouton de toggle (trois traits) */
+.i-bar {
+  position: relative;
+}
+.i-bar::before,
+.i-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: currentColor;
+  border-radius: 2px;
+}
+.i-bar::before {
+  top: -8px;
+}
+.i-bar::after {
+  bottom: -8px;
+}
