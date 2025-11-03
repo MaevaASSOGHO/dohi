@@ -177,3 +177,40 @@ select:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px #0a0a0a inset;
   transition: background-color 9999s ease-in-out 0s;
 }
+/* Dans App.css - ajoute ces règles */
+.hamburger-line {
+  transition: all 0.3s ease;
+}
+
+/* Animation optionnelle pour le bouton hamburger */
+.hamburger-active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger-active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Amélioration du header sticky */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Réduction des espaces pour un layout plus compact */
+.compact-layout {
+  padding-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .compact-layout {
+    padding-top: 1rem;
+  }
+}
