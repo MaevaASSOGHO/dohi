@@ -5,8 +5,11 @@
 html, body, #root {
   height: 100%;
   background: #000;
+  max-width: 100%; overflow-x: hidden;
 }
-body { margin: 0; }
+body { margin: 0;
+       max-width: 100%; 
+       overflow-x: hidden; }
 
 /* --- Le shell occupe tout l’écran (utile si tu changes la structure) --- */
 .app-shell {
@@ -22,12 +25,64 @@ body { margin: 0; }
   flex-direction: column;
 }
 
+/* Toutes les images se réduisent correctement */
+
+/* Images et médias fluides */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Évite les min-width rigides héritées */
+.outlet-stretcher,
+[class*="container"] {
+  min-width: 0;
+}
+
+/* Pour les blocs collés au bord avec padding interne */
+.edge-x {
+  margin-left: calc(-1 * var(--edge-x, 0));
+  margin-right: calc(-1 * var(--edge-x, 0));
+  padding-left: var(--edge-x, 0);
+  padding-right: var(--edge-x, 0);
+}
+
+/* Boutons & inputs : éviter les dépassements en mobile étroit */
+button, input, select, textarea {
+  min-width: 0;
+}
+
+/* Fixe d’éléments sticky/fixed : aider le scroll en iOS */
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+.sticky-safe {
+  top: calc(4rem + var(--safe-top, 0px)); /* ajuste selon ta topbar */
+}
+
+/* Grilles génériques (fallback si composant oublié) */
+.grid-autofit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+
+/* Réduit le “tap highlight” gênant sur mobile */
+* { -webkit-tap-highlight-color: rgba(0,0,0,0); }
+
+/* Évite les min-width rigides posées par erreur */
+[class*="container"] {
+  min-width: 0;
+}
+
 /* Ce wrapper entoure <Outlet/> pour que l’enfant prenne toute la hauteur */
 .outlet-stretcher {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
 }
 
 /* Le premier enfant (ta page) s’étire sur la hauteur restante */

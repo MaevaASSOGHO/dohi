@@ -10,12 +10,12 @@ export default function KycWizardOnly() {
     <div className="mx-auto max-w-2xl p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Vérification d’identité</h1>
-        <button
+        {/* <button
           onClick={() => navigate(backTo)}
           className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800"
         >
           Revenir
-        </button>
+        </button> */}
       </div>
 
       {/* Tu peux exposer un onSubmitted() depuis KycWizard, sinon laisse l’alert côté composant */}

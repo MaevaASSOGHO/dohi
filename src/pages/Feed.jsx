@@ -4,25 +4,21 @@ import { api } from "../lib/api";
 import PostCard from "../components/feed/PostCard";
 import { useNavigate } from "react-router-dom";
 
-/* Skeleton pour le chargement */
-function PostSkeleton() {
-  return (
-    <div className="w-full rounded-2xl ring-1 ring-neutral-800/80 bg-neutral-950/70 overflow-hidden animate-pulse">
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div className="h-9 w-9 rounded-full bg-neutral-800" />
-        <div className="flex-1">
-          <div className="h-3 w-40 bg-neutral-800 rounded" />
-          <div className="h-3 w-24 bg-neutral-900 rounded mt-2" />
-        </div>
-      </div>
-      <div className="px-4 pb-4">
-        <div className="h-24 bg-neutral-900 rounded" />
-      </div>
-    </div>
-  );
-}
+/* Skeleton */
+function PostSkeleton() { return ( <div className="w-full rounded-2xl ring-1 ring-neutral-800/80 bg-neutral-950/70 overflow-hidden animate-pulse"> 
+<div className="flex items-center gap-3 px-4 py-3"> 
+  <div className="h-9 w-9 rounded-full bg-neutral-800" />
+  <div className="flex-1">
+    <div className="h-3 w-40 bg-neutral-800 rounded" />
+    <div className="h-3 w-24 bg-neutral-900 rounded mt-2" />
+  </div>
+</div>
+<div className="px-4 pb-4">
+  <div className="h-24 bg-neutral-900 rounded" />
+</div>
+</div> ); }
 
-/* Carte hydratée (inchangée côté logique) */
+/* Carte hydratée */
 function PostCardHydrated({ item, onOpen }) {
   const queryClient = useQueryClient();
 
@@ -131,9 +127,7 @@ function PostCardHydrated({ item, onOpen }) {
     <div className="w-full">
       <PostCard
         item={merged}
-        onMediaClick={() => {
-          if (reportId) onOpen(reportId);
-        }}
+        onMediaClick={() => { if (reportId) onOpen(reportId); }}
         countsOverride={{ useful, notUseful }}
         myVote={myVote}
         onVoteUseful={() => voteToggle(true)}
@@ -182,19 +176,11 @@ export default function Feed() {
 
   const allItems = useMemo(() => data?.pages?.flatMap((p) => p.items) ?? [], [data]);
 
-  const handleOpenReport = (reportId) => {
-    navigate(`/reports/${reportId}`);
-  };
+  const handleOpenReport = (reportId) => navigate(`/reports/${reportId}`);
 
   return (
-    // === LARGEUR : on ne met PAS de max-w ici, on prend la largeur du <main> parent ===
     <div className="w-full flex flex-col min-h-full">
-      {/* Gouttières horizontales, pas de max-w */}
       <div className="w-full flex-1 flex flex-col px-2 sm:px-4 md:px-6">
-        {/* Barre sticky (optionnelle) – garde-la pleine largeur */}
-        <div className="sticky top-14 z-10 -mx-2 sm:-mx-4 md:-mx-6 mb-2 px-2 sm:px-4 md:px-6 py-2 bg-gradient-to-b from-black/90 to-black/40 supports-[backdrop-filter]:bg-black/40 backdrop-blur">
-          {/* Titre/onglets si besoin */}
-        </div>
 
         {isError && (
           <div className="w-full rounded-2xl border border-red-800 bg-red-900/20 p-4 text-sm text-red-200">
@@ -210,15 +196,18 @@ export default function Feed() {
           </div>
         )}
 
-        <div className="w-full flex-1 flex flex-col gap-4">
-          {allItems.map((it, idx) => (
-            <PostCardHydrated
-              key={(it.id ?? it.reportId ?? idx) + "-" + idx}
-              item={it}
-              onOpen={handleOpenReport}
-            />
-          ))}
+        {/* LISTE — mobile ONLY en grille 1 col ; desktop inchangé en flow */}
+        <div className="w-full flex-1">
+          {/* Sous 640px → grid 1 col ; dès 640px → on revient en bloc (flow d’origine) */}
+          <div className="grid grid-cols-1 gap-3 sm:block">
+            {allItems.map((it, idx) => (
+              <div key={(it.id ?? it.reportId ?? idx) + "-" + idx} className="sm:mb-4">
+                <PostCardHydrated item={it} onOpen={handleOpenReport} />
+              </div>
+            ))}
+          </div>
         </div>
+
 
         {!isLoading && !isError && allItems.length === 0 && (
           <div className="w-full rounded-2xl ring-1 ring-neutral-800 bg-neutral-950/60 p-6 text-center text-neutral-300">

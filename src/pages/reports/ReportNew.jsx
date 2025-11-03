@@ -1,5 +1,5 @@
 // src/pages/reports/ReportNew.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -12,6 +12,55 @@ function useDebouncedValue(value, delay = 400) {
     return () => clearTimeout(id);
   }, [value, delay]);
   return v;
+}
+
+/** Champs contrôlés robustes (préservent le focus pendant la frappe) */
+function TextField({
+  label,
+  value,
+  onCommit,
+  placeholder = "",
+  maxLength,
+  type = "text",
+  className = "",
+  disabled = false,
+  as = "input",
+  rows = 3,
+}) {
+  const [local, setLocal] = useState(value ?? "");
+  // hydrate uniquement quand la valeur externe change réellement
+  useEffect(() => {
+    // on garde la frappe en cours si identique
+    if ((value ?? "") !== local) setLocal(value ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const Base = as === "textarea" ? "textarea" : "input";
+
+  return (
+    <div>
+      {label && <label className="block text-xs text-neutral-400 mb-1">{label}</label>}
+      <Base
+        type={as === "textarea" ? undefined : type}
+        rows={as === "textarea" ? rows : undefined}
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={() => onCommit?.(local)}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        disabled={disabled}
+        className={[
+          "w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm",
+          className,
+        ].join(" ")}
+      />
+      {typeof maxLength === "number" && (
+        <div className="mt-1 text-[10px] text-neutral-500">
+          {(local || "").trim().length}/{maxLength}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const SCENARIOS = [
@@ -56,12 +105,15 @@ export default function ReportNew() {
     me?.verified
   );
 
+  // invalider /me une seule fois au montage
   useEffect(() => {
     qc.invalidateQueries({ queryKey: ["me"] });
-  }, [qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ——— Wizard
   const [step, setStep] = useState(0);
+  const [skippedKyc, setSkippedKyc] = useState(false);
   useEffect(() => {
     if (isVerified && (forceStep === 3 || prefill?.caseId)) setStep(3);
     else if (isVerified && step === 0) setStep(1);
@@ -84,7 +136,7 @@ export default function ReportNew() {
     staleTime: 10_000,
   });
 
-  // ——— Step 3: infos
+  // ——— Step 3: infos (source de vérité *globale* minimale)
   const [title, setTitle]       = useState(prefill?.title || "");
   const [scenario, setScenario] = useState(prefill?.scenario || "phone");
   const [phone, setPhone]       = useState(prefill?.identifiers?.phone || "");
@@ -131,11 +183,11 @@ export default function ReportNew() {
   const canNextFromStep5 = story.trim().length >= MIN_STORY;
   const canPublish       = canNextFromStep5 && agreedRules && confirmTruth;
 
-  // ——— Publication: crée (case si besoin) → crée report (in_review) → upload evidence (par report) → testimony (case)
+  // ——— Publication
   const publishMutation = useMutation({
     mutationFn: async () => {
       // helper type du report
-      const type =
+      const reportType =
         scenario === "person" ? "Personne" :
         scenario === "phone"  ? "Téléphone" :
         scenario === "company"? "Entreprise" :
@@ -145,16 +197,11 @@ export default function ReportNew() {
       // (A) Ajout à un dossier existant
       if (prefill?.caseId) {
         const caseId = prefill.caseId;
-
-        // (1) Créer le report (status in_review pour la modération)
         const createdReport = await api.post('/reports', {
           case_id: caseId,
           title: title.trim(),
-          description: (story || '').trim(),   // ✅ récit complet
-          type: scenario === 'person' ? 'Personne'
-              : scenario === 'phone' ? 'Téléphone'
-              : scenario === 'company' ? 'Entreprise'
-              : 'Autre',
+          description: (story || '').trim(),
+          type: reportType,
           category: scamType,
           is_public: true,
           status: 'in_review',
@@ -162,7 +209,7 @@ export default function ReportNew() {
         const reportId = createdReport?.data?.id || createdReport?.data?.report?.id;
         if (!reportId) throw new Error("Report créé mais id manquant");
 
-        // (2) Upload des médias PAR REPORT
+        // Upload des médias PAR REPORT
         for (const f of files) {
           const form = new FormData();
           form.append("file", f.file);
@@ -173,7 +220,8 @@ export default function ReportNew() {
             headers: { "Content-Type": "multipart/form-data" },
           });
         }
-        // (3) Notif (optionnelle – silencieuse) : à retirer si inutile en prod
+
+        // (facultatif) ping debug
         try {
           await api.post("/debug/make-notif", {
             user_id: me?.id,
@@ -186,11 +234,10 @@ export default function ReportNew() {
       }
 
       // (B) Nouveau dossier
-      // 1) Préparer l’entité à partir du scénario
       const kind =
         scenario === "phone"  ? "phone"  :
         scenario === "person" ? "person" :
-        scenario === "vehicle"? "company" : // on mappe “vehicle” sur entity kind “company” (à adapter si tu as un modèle “vehicle”)
+        scenario === "vehicle"? "company" : // à adapter si tu crées un modèle “vehicle”
         "company";
 
       const entityName =
@@ -198,7 +245,7 @@ export default function ReportNew() {
           ? (phone || fullName || brand || plate || website || "Inconnu")
           : (brand || fullName || phone || plate || website || "Inconnu");
 
-      // 2) Créer le case
+      // 1) create case
       const createdCase = await api.post("/cases", {
         entity: {
           name: entityName,
@@ -213,23 +260,20 @@ export default function ReportNew() {
       const caseId = createdCase?.data?.case?.id || createdCase?.data?.id;
       if (!caseId) throw new Error("Création du dossier impossible (id manquant).");
 
-      // 3) Créer le report (in_review)
+      // 2) create report
       const createdReport = await api.post('/reports', {
-          case_id: caseId,
-          title: title.trim(),
-          description: (story || '').trim(),   // ✅ récit complet
-          type: scenario === 'person' ? 'Personne'
-              : scenario === 'phone' ? 'Téléphone'
-              : scenario === 'company' ? 'Entreprise'
-              : 'Autre',
-          category: scamType,
-          is_public: true,
-          status: 'in_review',
-        });
+        case_id: caseId,
+        title: title.trim(),
+        description: (story || '').trim(),
+        type: reportType,
+        category: scamType,
+        is_public: true,
+        status: 'in_review',
+      });
       const reportId = createdReport?.data?.id || createdReport?.data?.report?.id;
       if (!reportId) throw new Error("Report créé mais id manquant");
 
-      // 4) Upload des médias PAR REPORT
+      // 3) upload médias
       for (const f of files) {
         const form = new FormData();
         form.append("file", f.file);
@@ -241,7 +285,7 @@ export default function ReportNew() {
         });
       }
 
-      // 5) Notif (optionnelle – silencieuse)
+      // (facultatif) ping debug
       try {
         await api.post("/debug/make-notif", {
           user_id: me?.id,
@@ -255,7 +299,6 @@ export default function ReportNew() {
 
     onSuccess: ({ reportId }) => {
       alert("Votre signalement a été envoyé et va passer en examen.");
-      // rafraîchir le feed et le profil si tu veux
       qc.invalidateQueries({ queryKey: ["feed"] });
       qc.invalidateQueries({ queryKey: ["me"] });
       navigate(`/reports/${reportId}`);
@@ -327,16 +370,28 @@ export default function ReportNew() {
 
       {/* Step 0 — Gate */}
       {step === 0 && (
-        <Step n={0} title="Compte vérifié requis">
+        <Step n={0} title="Compte vérifié (optionnel pour publier)">
           {isVerified ? (
-            <div className="text-sm text-neutral-300">Votre compte est vérifié. Continuer.</div>
+            <div className="space-y-3 text-sm">
+              <p className="text-neutral-300">
+                Votre compte est <strong>vérifié</strong>. Vous pouvez continuer et publier.
+              </p>
+              <div className="mt-4">
+                <NextPrev canNext={true} onNext={() => setStep(1)} />
+              </div>
+            </div>
           ) : (
             <div className="space-y-3 text-sm">
-              <p>
-                Seuls les comptes <strong>vérifiés (ID + téléphone)</strong> peuvent publier des
-                signalements.
-              </p>
-              <div className="flex items-center gap-2">
+              <div className="rounded border border-yellow-800 bg-yellow-900/20 p-3 text-yellow-100">
+                <div className="font-medium mb-1">Publication possible sans vérification</div>
+                <p>
+                  Votre signalement sera <strong>mis en examen</strong> par la modération. Pour{" "}
+                  <em>accélérer la validation</em>, nous recommandons de{" "}
+                  <strong>vérifier votre identité (KYC)</strong> avant ou après la publication.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => navigate("/kyc", { state: { from: "/reports/new" } })}
@@ -344,19 +399,19 @@ export default function ReportNew() {
                 >
                   Vérifier mon compte
                 </button>
+
                 <button
                   type="button"
+                  onClick={() => { setSkippedKyc(true); setStep(1); }}
                   className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900"
-                  disabled
                 >
-                  Continuer
+                  Continuer sans vérifier
                 </button>
               </div>
-            </div>
-          )}
-          {isVerified && (
-            <div className="mt-4">
-              <NextPrev canNext={true} onNext={() => setStep(1)} />
+
+              <p className="text-xs text-neutral-400">
+                Vous pourrez revenir faire la vérification depuis le menu (portrait/paramètres) à tout moment.
+              </p>
             </div>
           )}
         </Step>
@@ -390,11 +445,10 @@ export default function ReportNew() {
             Avant de créer un nouveau dossier, vérifiez s’il n’existe pas déjà (y compris variantes
             d’orthographe).
           </p>
-          <input
+          <TextField
             value={preQ}
-            onChange={(e) => setPreQ(e.target.value)}
+            onCommit={(v) => setPreQ(v)}
             placeholder="Nom, numéro, plaque, site, @compte…"
-            className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
           />
           {preQ.trim().length < minLen && (
             <div className="p-3 text-xs text-neutral-500">Tape au moins {minLen} caractère…</div>
@@ -430,19 +484,13 @@ export default function ReportNew() {
       {step === 3 && (
         <Step n={3} title="Dossier : informations principales">
           <div className="grid gap-3">
-            <div>
-              <label className="block text-xs text-neutral-400 mb-1">Titre du dossier</label>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                maxLength={MAX_TITLE}
-                placeholder="Nom d’entreprise, numéro de téléphone, plaque…"
-                className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-              />
-              <div className="mt-1 text-[10px] text-neutral-500">
-                {title.trim().length}/{MAX_TITLE}
-              </div>
-            </div>
+            <TextField
+              label="Titre du dossier"
+              value={title}
+              onCommit={(v) => setTitle(v)}
+              maxLength={MAX_TITLE}
+              placeholder="Nom d’entreprise, numéro de téléphone, plaque…"
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -459,93 +507,71 @@ export default function ReportNew() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Ville / Lieu</label>
-                <input
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Abidjan…"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
+              <TextField
+                label="Ville / Lieu"
+                value={city}
+                onCommit={(v) => setCity(v)}
+                placeholder="Abidjan…"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-neutral-400 mb-1">Date</label>
-                <input
-                  type="date"
+                <TextField
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+                  onCommit={(v) => setDate(v)}
+                  type="date"
                 />
               </div>
             </div>
 
             {scenario === "phone" && (
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Numéro de téléphone</label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+225 01 23 45 67"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
+              <TextField
+                label="Numéro de téléphone"
+                value={phone}
+                onCommit={(v) => setPhone(v)}
+                placeholder="+225 01 23 45 67"
+              />
             )}
             {scenario === "person" && (
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Nom complet</label>
-                <input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="K. D. N'Guessan"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
+              <TextField
+                label="Nom complet"
+                value={fullName}
+                onCommit={(v) => setFullName(v)}
+                placeholder="K. D. N'Guessan"
+              />
             )}
             {scenario === "vehicle" && (
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Plaque d’immatriculation</label>
-                <input
-                  value={plate}
-                  onChange={(e) => setPlate(e.target.value)}
-                  placeholder="1234-HJ-01"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
+              <TextField
+                label="Plaque d’immatriculation"
+                value={plate}
+                onCommit={(v) => setPlate(v)}
+                placeholder="1234-HJ-01"
+              />
             )}
             {scenario === "company" && (
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Entreprise / Marque</label>
-                <input
-                  value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                  placeholder="Orange CI"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
+              <TextField
+                label="Entreprise / Marque"
+                value={brand}
+                onCommit={(v) => setBrand(v)}
+                placeholder="Orange CI"
+              />
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Site web</label>
-                <input
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="https://…"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Réseaux sociaux</label>
-                <input
-                  value={socials}
-                  onChange={(e) => setSocials(e.target.value)}
-                  placeholder="@pseudo, lien Insta/TikTok…"
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
-                />
-              </div>
+              <TextField
+                label="Site web"
+                value={website}
+                onCommit={(v) => setWebsite(v)}
+                placeholder="https://…"
+              />
+              <TextField
+                label="Réseaux sociaux"
+                value={socials}
+                onCommit={(v) => setSocials(v)}
+                placeholder="@pseudo, lien Insta/TikTok…"
+              />
             </div>
           </div>
           <NextPrev canNext={canNextFromStep3} onNext={() => setStep(4)} />
@@ -617,12 +643,12 @@ export default function ReportNew() {
               <em>Quel préjudice (montant / perte) ?</em>{" "}
               <em>As-tu contacté la police ?</em>
             </div>
-            <textarea
+            <TextField
+              as="textarea"
               rows={6}
               value={story}
-              onChange={(e) => setStory(e.target.value)}
+              onCommit={(v) => setStory(v)}
               placeholder={`Min. ${MIN_STORY} caractères. Donne des faits utiles (dates, montants, échanges, etc.).`}
-              className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
             />
             <div className="text-[10px] text-neutral-500">
               {story.trim().length} caractères
@@ -669,7 +695,11 @@ export default function ReportNew() {
               />
               Je certifie l’exactitude de mon témoignage.
             </label>
-
+            {skippedKyc && (
+              <div className="rounded border border-yellow-800 bg-yellow-900/20 p-2 text-xs text-yellow-100">
+                Astuce : la vérification d’identité peut accélérer la validation de votre signalement.
+              </div>
+            )}
             {publishMutation.isError && (
               <div className="text-xs text-red-300">
                 Échec de la publication. Vérifie la console / logs serveur.
