@@ -121,94 +121,103 @@ export default function App() {
 
   return (
     <div className="min-h-dvh bg-black text-neutral-100">
-      {/* Bouton hamburger mobile */}
-      <div className="fixed left-3 top-3 z-50">
-        <HamburgerButton onClick={() => setSidebarOpen(v => !v)} />
-      </div>
+      {/* HEADER VIOLET FIXE (hamburger à gauche, logo centré) */}
+      <header className="fixed inset-x-0 top-0 z-50 bg-violet-900/30 border-b border-violet-800/50 backdrop-blur">
+       <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8 h-16 sm:h-20 grid grid-cols-[auto_1fr_auto] items-center">
+          {/* Hamburger dans le header */}
+          <div className="flex items-center">
+            <HamburgerButton onClick={() => setSidebarOpen(v => !v)} />
+          </div>
 
-    {/* TOPBAR MEDIUM */}
-{/* HEADER qui défile (pas fixe) */}
-<header className="w-full flex justify-center">
-  <Link to="/" className="py-1 md:py-2 opacity-95 hover:opacity-100 transition" aria-label="Aller à l’accueil">
-    <img
-      src="/Dohi-logo2.png"
-      alt="OS Scammer"
-      className="block w-auto !h-[56px] md:!h-[64px] object-contain"
-    />
-  </Link>
-</header>
+          {/* Logo centré (légèrement plus grand) */}
+          <div className="flex items-center justify-center h-full overflow-hidden">
+            <Link to="/" aria-label="Aller à l’accueil" className="block">
+              <img
+                src="/Dohi-logo2.png"
+                alt="OS Scammer"
+                className="block h-auto max-h-full w-[110px] sm:w-[140px] object-contain"
+              />
+            </Link>
+          </div>
 
-      {/* Overlay mobile (ferme la sidebar au clic) */}
-      {isSmall && sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 sm:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+          {/* Espace à droite (réservé si plus tard on met un bouton) */}
+          <div />
+        </div>
+      </header>
 
-      {/* Overlay (cliquable) quand la sidebar est ouverte */}
+      {/* OVERLAY sous le header (ne cache ni le logo ni le hamburger) */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 bg-black/40 backdrop-blur pointer-events-none"
+          style={{ top: '5rem' }} // ≈ h-20 (80px) pour coller au nouveau header
+        />
       )}
 
-      {/* SIDEBAR en overlay fixe (toutes tailles) */}
+      {/* SIDEBAR EN SLIDE-DOWN (depuis le haut, sous le header) */}
       <aside
         className={[
-          "fixed left-0 top-0 z-50 h-dvh w-64",
-          "rounded-none sm:rounded-r-xl",
-          "border-r sm:border border-neutral-800/70",
-          "bg-neutral-950/80 backdrop-blur",
-          "transition-transform duration-300 ease-out",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed left-0 top-0 z-40 w-full",
+          "transition-transform duration-300 ease-out origin-top",
+          // descend jusque sous le header (≈ 3.5rem mobile, 4rem sm+)
+          sidebarOpen ? "translate-y-16 sm:translate-y-20" : "-translate-y-full",
         ].join(" ")}
         aria-label="Menu latéral"
       >
-        <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-800/60">
-          {/* (pas de hamburger ici, on ne le duplique pas) */}
-          {!isAuthenticated ? (
-            <Link
-              to="/login"
-              className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
-            >
-              <IconLogin /><span>Se connecter</span>
-            </Link>
-          ) : (
-            <button
-              onClick={handleLogout}
-              className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
-            >
-              <span>Se déconnecter</span>
-            </button>
-          )}
+        <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8">
+          <div className="rounded-b-xl border-x border-b border-neutral-800/70 bg-neutral-950/90 backdrop-blur">
+            {/* Bandeau top interne (login/logout) */}
+            <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-800/60">
+              {!isAuthenticated ? (
+                <Link
+                  to="/login"
+                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
+                >
+                  <IconLogin /><span>Se connecter</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
+                >
+                  <span>Se déconnecter</span>
+                </button>
+              )}
+            </div>
+
+            {/* Navigation */}
+            <nav id="sidebar-nav" className="py-2">
+              <ul className="space-y-1">
+                {nav.map((item) => {
+                  const Active = pathname === item.to;
+                  const Icon = item.icon;
+                  const classes = [
+                    "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
+                    Active ? "bg-neutral-800/70 ring-1 ring-neutral-700" : "hover:bg-neutral-900/60",
+                  ].join(" ");
+                  return (
+                    <li key={item.to}>
+                      {item.external ? (
+                        <a href={item.to} target="_blank" rel="noopener noreferrer" className={classes}>
+                          <Icon className="h-6 w-6 shrink-0" />
+                          <span className="text-sm">{item.label}</span>
+                        </a>
+                      ) : (
+                        <Link to={item.to} className={classes} onClick={() => setSidebarOpen(false)}>
+                          <Icon className="h-6 w-6 shrink-0" />
+                          <span className="text-sm">{item.label}</span>
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </div>
         </div>
-        <nav id="sidebar-nav" className="py-2">
-          <ul className="space-y-1">
-            {nav.map((item) => {
-              const Active = pathname === item.to;
-              const Icon = item.icon;
-              const classes = [
-                "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
-                Active ? "bg-neutral-800/70 ring-1 ring-neutral-700" : "hover:bg-neutral-900/60",
-              ].join(" ");
-              return (
-                <li key={item.to}>
-                  {item.external ? (
-                    <a href={item.to} target="_blank" rel="noopener noreferrer" className={classes}>
-                      <Icon className="h-6 w-6 shrink-0" />
-                      <span className="text-sm">{item.label}</span>
-                    </a>
-                  ) : (
-                    <Link to={item.to} className={classes}>
-                      <Icon className="h-6 w-6 shrink-0" />
-                      <span className="text-sm">{item.label}</span>
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
       </aside>
 
-      {/* CONTENU en pleine largeur (plus d’espace “réservé” par la sidebar) */}
-      <div className={`${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
+      {/* CONTENU (passe sous le header) */}
+      <div className={`pt-20 sm:pt-24 ${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
         <main className="bg-neutral-950/60 backdrop-blur px-3 sm:px-6 md:px-8 pt-3 sm:pt-4 pb-6 min-h-[60dvh]">
           <div className="outlet-stretcher min-w-0">
             <Outlet />
