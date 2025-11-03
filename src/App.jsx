@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import "./App.css";
-import ToggleKebab from "./components/ToggleKebab";
+import HamburgerButton from "./components/HamburgerButton";
 import { api } from "./lib/api";
 
 /* Auth réactive (token localStorage + events cross-tab) */
@@ -100,6 +100,7 @@ export default function App() {
   }, []);
 
   const nav = [
+    { to: "/", label: "Accueil", icon: IconFeed },
     { to: "/discover", label: "Découvrir", icon: IconDiscover },
     { to: "/feed", label: "Fil d’actualité", icon: IconFeed },
     { to: "/notifications/Notifications", label: "Notifications", icon: IconBell },
@@ -122,29 +123,17 @@ export default function App() {
     <div className="min-h-dvh bg-black text-neutral-100">
       {/* Bouton hamburger mobile */}
       <div className="fixed left-3 top-3 z-50 sm:hidden">
-        <button
-          onClick={() => setSidebarOpen((v) => !v)}
-          className="inline-flex items-center justify-center rounded-md px-3 py-2 ring-1 ring-neutral-700 bg-neutral-900/70"
-          aria-label="Ouvrir le menu"
-        >
-          <span className="block w-5 h-[2px] bg-neutral-200 mb-[5px]" />
-          <span className="block w-5 h-[2px] bg-neutral-200 mb-[5px]" />
-          <span className="block w-5 h-[2px] bg-neutral-200" />
-        </button>
+        <HamburgerButton onClick={() => setSidebarOpen(v => !v)} />
       </div>
 
     {/* TOPBAR MEDIUM */}
 {/* HEADER qui défile (pas fixe) */}
 <header className="w-full flex justify-center">
-  <Link
-    to="/feed"
-    className="py-2 md:py-3 opacity-95 hover:opacity-100 transition"
-    aria-label="Aller au fil d’actualité"
-  >
+  <Link to="/" className="py-1 md:py-2 opacity-95 hover:opacity-100 transition" aria-label="Aller à l’accueil">
     <img
       src="/Dohi-logo2.png"
       alt="OS Scammer"
-      className="block w-auto !h-[62px] md:!h-[72px] lg:!h-[72px] xl:!h-[72px] object-contain"
+      className="block w-auto !h-[56px] md:!h-[64px] object-contain"
     />
   </Link>
 </header>
@@ -173,7 +162,7 @@ export default function App() {
           >
             {/* Entête sidebar */}
             <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-800/60">
-              <ToggleKebab isOpen={sidebarOpen} onClick={() => setSidebarOpen((v) => !v)} />
+              <HamburgerButton onClick={() => setSidebarOpen((v) => !v)} className="sm:hidden" />
 
               {!isAuthenticated ? (
                 <Link
@@ -232,7 +221,7 @@ export default function App() {
           </aside>
 
           {/* CONTENU */}
-          <main className="flex-1 bg-neutral-950/60 backdrop-blur px-3 sm:px-6 md:px-8 py-4 sm:py-6 min-h-[60dvh]">
+         <main className="flex-1 bg-neutral-950/60 backdrop-blur px-3 sm:px-6 md:px-8 pt-3 sm:pt-4 pb-6 min-h-[60dvh]">
             <div className="outlet-stretcher min-w-0">
               <Outlet />
             </div>

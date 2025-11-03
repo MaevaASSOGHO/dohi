@@ -5,6 +5,7 @@ import ReportDetail from "../pages/reports/ReportDetail";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import Queue from "../pages/admin/Queue";
+import Home from "../pages/Home";
 import Discover from "../pages/Discover";
 import Feed from "../pages/Feed";
 import Settings from "../pages/settings/Settings";
@@ -18,7 +19,8 @@ export const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { index: true, element: <ReportsList /> },
+      // { index: true, element: <ReportsList /> },
+      { path: "/", element: <Home /> },
       { path: "discover", element: <Discover /> },
       { path: "feed", element: <Feed /> },
       { path: "reports/new", element: <ReportNew /> },
