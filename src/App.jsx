@@ -122,7 +122,7 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-black text-neutral-100">
       {/* Bouton hamburger mobile */}
-      <div className="fixed left-3 top-3 z-50 sm:hidden">
+      <div className="fixed left-3 top-3 z-50">
         <HamburgerButton onClick={() => setSidebarOpen(v => !v)} />
       </div>
 
@@ -138,95 +138,82 @@ export default function App() {
   </Link>
 </header>
 
-
-
-
-
       {/* Overlay mobile (ferme la sidebar au clic) */}
       {isSmall && sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 sm:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className={`${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
-  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-          {/* SIDEBAR (off-canvas en mobile, sticky en desktop) */}
-          <aside
-            className={[
-              "z-50 sm:z-auto sm:sticky sm:top-16 sm:h-[calc(100dvh-4rem)]",
-              "rounded-xl border border-neutral-800/70 bg-neutral-950/70 backdrop-blur",
-              "transition-transform duration-300 ease-out overflow-hidden",
-              isSmall ? (sidebarOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0",
-              "w-64 sm:w-64",
-            ].join(" ")}
-            aria-label="Menu latéral"
-          >
-            {/* Entête sidebar */}
-            <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-800/60">
-              <HamburgerButton onClick={() => setSidebarOpen((v) => !v)} className="sm:hidden" />
+      {/* Overlay (cliquable) quand la sidebar est ouverte */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)} />
+      )}
 
-              {!isAuthenticated ? (
-                <Link
-                  to="/login"
-                  className={[
-                    "ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md",
-                    "ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition",
-                    sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-                  ].join(" ")}
-                >
-                  <IconLogin />
-                  <span>Se connecter</span>
-                </Link>
-              ) : (
-                <button
-                  onClick={handleLogout}
-                  className={[
-                    "ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md",
-                    "ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition",
-                    sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-                  ].join(" ")}
-                >
-                  <span>Se déconnecter</span>
-                </button>
-              )}
-            </div>
-
-            {/* Navigation */}
-            <nav id="sidebar-nav" className="py-2">
-              <ul className="space-y-1">
-                {nav.map((item) => {
-                  const Active = pathname === item.to;
-                  const Icon = item.icon;
-                  const classes = [
-                    "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
-                    Active ? "bg-neutral-800/70 ring-1 ring-neutral-700" : "hover:bg-neutral-900/60",
-                  ].join(" ");
-                  return (
-                    <li key={item.to}>
-                      {item.external ? (
-                        <a href={item.to} target="_blank" rel="noopener noreferrer" className={classes}>
-                          <Icon className="h-6 w-6 shrink-0" />
-                          <span className={`${sidebarOpen ? "block" : "hidden"} text-sm`}>{item.label}</span>
-                        </a>
-                      ) : (
-                        <Link to={item.to} className={classes} title={!sidebarOpen ? item.label : undefined}>
-                          <Icon className="h-6 w-6 shrink-0" />
-                          <span className={`${sidebarOpen ? "block" : "hidden"} text-sm`}>{item.label}</span>
-                        </Link>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-          </aside>
-
-          {/* CONTENU */}
-         <main className="flex-1 bg-neutral-950/60 backdrop-blur px-3 sm:px-6 md:px-8 pt-3 sm:pt-4 pb-6 min-h-[60dvh]">
-            <div className="outlet-stretcher min-w-0">
-              <Outlet />
-            </div>
-          </main>
+      {/* SIDEBAR en overlay fixe (toutes tailles) */}
+      <aside
+        className={[
+          "fixed left-0 top-0 z-50 h-dvh w-64",
+          "rounded-none sm:rounded-r-xl",
+          "border-r sm:border border-neutral-800/70",
+          "bg-neutral-950/80 backdrop-blur",
+          "transition-transform duration-300 ease-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        ].join(" ")}
+        aria-label="Menu latéral"
+      >
+        <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-800/60">
+          {/* (pas de hamburger ici, on ne le duplique pas) */}
+          {!isAuthenticated ? (
+            <Link
+              to="/login"
+              className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
+            >
+              <IconLogin /><span>Se connecter</span>
+            </Link>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
+            >
+              <span>Se déconnecter</span>
+            </button>
+          )}
         </div>
+        <nav id="sidebar-nav" className="py-2">
+          <ul className="space-y-1">
+            {nav.map((item) => {
+              const Active = pathname === item.to;
+              const Icon = item.icon;
+              const classes = [
+                "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
+                Active ? "bg-neutral-800/70 ring-1 ring-neutral-700" : "hover:bg-neutral-900/60",
+              ].join(" ");
+              return (
+                <li key={item.to}>
+                  {item.external ? (
+                    <a href={item.to} target="_blank" rel="noopener noreferrer" className={classes}>
+                      <Icon className="h-6 w-6 shrink-0" />
+                      <span className="text-sm">{item.label}</span>
+                    </a>
+                  ) : (
+                    <Link to={item.to} className={classes}>
+                      <Icon className="h-6 w-6 shrink-0" />
+                      <span className="text-sm">{item.label}</span>
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </aside>
+
+      {/* CONTENU en pleine largeur (plus d’espace “réservé” par la sidebar) */}
+      <div className={`${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
+        <main className="bg-neutral-950/60 backdrop-blur px-3 sm:px-6 md:px-8 pt-3 sm:pt-4 pb-6 min-h-[60dvh]">
+          <div className="outlet-stretcher min-w-0">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   );

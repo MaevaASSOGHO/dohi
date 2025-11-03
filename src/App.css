@@ -126,12 +126,29 @@ button, input, select, textarea {
   bottom: -8px;
 }
 /* === Boutons : neutraliser les styles mobiles qui virent en blanc === */
-button, .btn {
+button,
+[type="button"],
+[type="submit"],
+[role="button"] {
   -webkit-appearance: none;
   appearance: none;
-  background: transparent;
-  color: inherit;
-  border: none; /* on contrôle les borders avec les classes Tailwind */
+  background: rgb(23 23 23);         /* neutral-900 */
+  color: #fff;
+  border: 1px solid rgb(64 64 64);   /* neutral-700 */
+  border-radius: .6rem;
+}
+button:hover,
+[type="button"]:hover,
+[type="submit"]:hover,
+[role="button"]:hover {
+  background: rgb(38 38 38);
+  border-color: rgb(82 82 82);
+}
+button:active,
+[type="button"]:active,
+[type="submit"]:active,
+[role="button"]:active {
+  background: rgb(64 64 64);
 }
 
 /* Bouton sombre par défaut */
