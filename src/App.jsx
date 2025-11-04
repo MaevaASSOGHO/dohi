@@ -122,7 +122,7 @@ export default function App() {
   return (
     <div className="min-h-dvh bg-black text-neutral-100">
       {/* HEADER VIOLET FIXE (hamburger à gauche, logo centré) */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-violet-900/30 border-b border-violet-800/50 backdrop-blur">
+      <header className="fixed inset-x-0 top-0 z-50 bg-violet-900 border-b border-violet-800/50 backdrop-blur">
        <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8 h-16 sm:h-20 grid grid-cols-[auto_1fr_auto] items-center">
           {/* Hamburger dans le header */}
           <div className="flex items-center">

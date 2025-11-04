@@ -1,77 +1,229 @@
 import React from "react";
-import { Link } from "react-router-dom";
+
+/* Icônes (SVG inline, teintées via Tailwind) */
+const IconReport = ({ className = "h-6 w-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path d="M7 3h7l3 3v15H7V3Z" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M10 8h5M10 12h5M10 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+);
+const IconSearch = ({ className = "h-6 w-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+);
+const IconBell = ({ className = "h-6 w-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path d="M6 14v-2a6 6 0 1 1 12 0v2c0 2-1 3-3 3H9c-2 0-3-1-3-3Z" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M10 17a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+);
+const IconShield = ({ className = "h-6 w-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <path d="M12 3 5 6v6c0 5 7 9 7 9s7-4 7-9V6l-7-3Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9.5 12.5 11 14l3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+const IconId = ({ className = "h-6 w-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.6"/>
+    <circle cx="8" cy="10" r="1.6" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M6.5 14c.9-1 2.4-1.5 4.5-1.5S14.6 13 15.5 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    <path d="M13 9.5h5M13 12h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+);
+const IconGlobe = ({ className = "h-6 w-6" }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+);
 
 export default function Home() {
   return (
-    <div className="relative isolate overflow-hidden rounded-2xl border border-neutral-800/70 bg-neutral-950/60 backdrop-blur">
-      {/* Hero */}
-      <section className="px-6 py-10 sm:px-10 sm:py-14 lg:px-16">
-        <div className="max-w-3xl">
-          <p className="inline-flex items-center gap-2 text-xs font-medium tracking-wide text-violet-300/90 bg-violet-950/30 ring-1 ring-violet-800/50 px-3 py-1 rounded-full mb-4">
-            OS Scammer — communauté anti-arnaques
-          </p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-white">
-            Dénonce, vérifie, protège-toi.
-          </h1>
-          <p className="mt-4 text-neutral-300 max-w-2xl">
-            Centralise les signalements, vérifie l’identité des vendeurs, et suis l’évolution des cas.
-            Ensemble, on assainit l’écosystème.
-          </p>
+    <div className="min-h-screen flex items-center justify-center py-8">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-2xl bg-[radial-gradient(1200px_600px_at_50%_-10%,rgba(124,58,237,0.18),transparent_60%),radial-gradient(800px_400px_at_-10%_20%,rgba(147,51,234,0.12),transparent_60%),radial-gradient(900px_480px_at_110%_30%,rgba(99,102,241,0.12),transparent_60%)]">
+          
+          {/* HERO SECTION */}
+          <section className="px-6 py-12 sm:px-10 sm:py-16 lg:px-16">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+              
+              {/* Texte Principal */}
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 text-xs font-medium tracking-wide text-violet-200 bg-violet-900/25 px-3 py-1 rounded-full mb-6">
+                  <span className="h-2 w-2 rounded-full bg-amber-400" />
+                  <span>OS Scammer — communauté anti-arnaques</span>
+                </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              to="/reports/new"
-              className="btn-dark"
-            >
-              ✍️ Nouveau signalement
-            </Link>
-            <Link
-              to="/discover"
-              className="btn-ghost"
-            >
-              🔎 Explorer les cas
-            </Link>
-            <Link
-              to="/feed"
-              className="btn-ghost"
-            >
-              📰 Fil d’actualité
-            </Link>
-          </div>
-        </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white mb-6">
+                  Dénonce, <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-amber-300">
+                    vérifie,
+                  </span> <br />
+                  protège-toi.
+                </h1>
 
-        {/* Stats */}
-        <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          {[
-            { k: "Signalements", v: "12 438+" },
-            { k: "Vérifications", v: "7 920+" },
-            { k: "Alertes envoyées", v: "32 k" },
-            { k: "Pays couverts", v: "28" },
-          ].map((s) => (
-            <div key={s.k} className="rounded-xl border border-neutral-800/60 bg-neutral-900/50 px-4 py-3">
-              <div className="text-lg sm:text-xl font-bold text-white">{s.v}</div>
-              <div className="text-xs text-neutral-400">{s.k}</div>
+                <p className="text-lg text-neutral-300 max-w-xl mb-8 leading-relaxed">
+                  Dépose un signalement en 2 minutes, vérifie une identité avant d'acheter,
+                  et reçois des alertes lorsque des profils suspects sont détectés.
+                </p>
+
+                {/* Actions Principales */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                    <IconReport className="h-8 w-8 text-violet-300 mb-3" />
+                    <div className="text-base font-semibold text-white mb-2">Signaler un cas</div>
+                    <p className="text-sm text-neutral-300 leading-relaxed">Ajoute des preuves pour protéger la communauté.</p>
+                  </div>
+                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                    <IconSearch className="h-8 w-8 text-amber-300 mb-3" />
+                    <div className="text-base font-semibold text-white mb-2">Vérifier un profil</div>
+                    <p className="text-sm text-neutral-300 leading-relaxed">Recherche par nom, téléphone, IBAN, pseudo…</p>
+                  </div>
+                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                    <IconBell className="h-8 w-8 text-amber-400 mb-3" />
+                    <div className="text-base font-semibold text-white mb-2">Recevoir des alertes</div>
+                    <p className="text-sm text-neutral-300 leading-relaxed">Suis l'évolution d'un cas et les récidives.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Illustration */}
+              <div className="relative">
+                <div className="absolute -inset-10 -top-10 h-40 opacity-30 blur-2xl" style={{ background: "radial-gradient(ellipse at center, #7c3aed40, transparent 60%)" }} />
+                <div className="rounded-2xl bg-neutral-900/50 p-3 border border-neutral-800">
+                  <div className="rounded-xl bg-gradient-to-br from-violet-500/10 to-amber-500/10 p-8 flex items-center justify-center min-h-[300px]">
+                    <img
+                      src="./assets/hero.png"
+                      alt="Illustration OS Scammer"
+                      className="block w-full h-auto rounded-xl object-cover max-w-md mx-auto"
+                    />
+                  </div>
+                </div>
+                
+                {/* Badges d'info */}
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-800">
+                    <IconGlobe className="h-5 w-5 text-violet-300" />
+                    <span className="text-sm font-medium text-neutral-200">28 pays</span>
+                  </div>
+                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-800">
+                    <IconShield className="h-5 w-5 text-amber-300" />
+                    <span className="text-sm font-medium text-neutral-200">Sécurité</span>
+                  </div>
+                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-800">
+                    <IconId className="h-5 w-5 text-violet-300" />
+                    <span className="text-sm font-medium text-neutral-200">KYC</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
 
-      {/* Derniers signalements (placeholder, tu peux brancher l’API ensuite) */}
-      <section className="px-6 pb-10 sm:px-10 lg:px-16">
-        <h2 className="text-xl font-semibold text-white mb-3">Derniers signalements</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {[1,2,3,4,5,6].map((i) => (
-            <div key={i} className="rounded-xl border border-neutral-800/60 bg-neutral-900/40 p-4">
-              <div className="h-40 w-full rounded-lg bg-neutral-800/60 mb-3" />
-              <div className="h-3 w-2/3 bg-neutral-800/70 rounded mb-2" />
-              <div className="h-3 w-1/2 bg-neutral-800/60 rounded" />
+          {/* COMMENT ÇA MARCHE SECTION */}
+          <section className="px-6 pb-12 sm:px-10 lg:px-16">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-white mb-3">Comment ça marche</h2>
+              <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
+                Un processus simple et efficace pour lutter contre les arnaques
+              </p>
             </div>
-          ))}
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
+              {/* Étape 1 */}
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">1</span>
+                  <span className="text-lg font-semibold text-white">Créer un signalement</span>
+                </div>
+                <p className="text-neutral-300 mb-4 leading-relaxed">
+                  Remplis le formulaire et ajoute des pièces justificatives en quelques minutes.
+                </p>
+                <div className="rounded-xl overflow-hidden bg-neutral-800/60 border border-neutral-700">
+                  <div className="mt-3 rounded-lg overflow-hidden bg-neutral-800/60">
+              <img src="/assets/steps/step1.png" alt="Étape 1" className="block w-full h-28 object-cover" />
+            </div>
+                </div>
+              </div>
+
+              {/* Étape 2 */}
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">2</span>
+                  <span className="text-lg font-semibold text-white">Vérifier une identité</span>
+                </div>
+                <p className="text-neutral-300 mb-4 leading-relaxed">
+                  Recherche par nom, téléphone, IBAN, pseudo, page sociale en temps réel.
+                </p>
+                <div className="rounded-xl overflow-hidden bg-neutral-800/60 border border-neutral-700">
+                  <div className="mt-3 rounded-lg overflow-hidden bg-neutral-800/60">
+                    <img src="/assets/steps/step2.png" alt="Étape 2" className="block w-full h-28 object-cover" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Étape 3 */}
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">3</span>
+                  <span className="text-lg font-semibold text-white">Croiser les preuves</span>
+                </div>
+                <p className="text-neutral-300 mb-4 leading-relaxed">
+                  Nos outils relient automatiquement les cas similaires pour repérer des schémas récurrents.
+                </p>
+                <div className="rounded-xl overflow-hidden bg-neutral-800/60 border border-neutral-700">
+                  <div className="mt-3 rounded-lg overflow-hidden bg-neutral-800/60">
+                    <img src="/assets/steps/step3.png" alt="Étape 3" className="block w-full h-28 object-cover" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Étape 4 */}
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">4</span>
+                  <span className="text-lg font-semibold text-white">Être alerté</span>
+                </div>
+                <p className="text-neutral-300 mb-4 leading-relaxed">
+                  Reçois des notifications pertinentes lorsqu'il y a du nouveau sur un cas que tu suis.
+                </p>
+                <div className="rounded-xl overflow-hidden bg-neutral-800/60 border border-neutral-700">
+                  <div className="mt-3 rounded-lg overflow-hidden bg-neutral-800/60">
+                    <img src="/assets/steps/step4.png" alt="Étape 4" className="block w-full h-28 object-cover" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section Confiance & Sécurité */}
+            <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 flex items-start gap-4">
+                <IconShield className="h-8 w-8 text-violet-300 shrink-0 mt-1" />
+                <div>
+                  <div className="text-lg font-semibold text-white mb-2">Protection des données</div>
+                  <p className="text-neutral-300 leading-relaxed">Données sensibles chiffrées de bout en bout, stockage sécurisé et conformité RGPD.</p>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 flex items-start gap-4">
+                <IconId className="h-8 w-8 text-amber-300 shrink-0 mt-1" />
+                <div>
+                  <div className="text-lg font-semibold text-white mb-2">Vérifications multiples</div>
+                  <p className="text-neutral-300 leading-relaxed">KYC avancé, validations communautaires et vérifications croisées.</p>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 flex items-start gap-4">
+                <IconBell className="h-8 w-8 text-amber-400 shrink-0 mt-1" />
+                <div>
+                  <div className="text-lg font-semibold text-white mb-2">Alertes intelligentes</div>
+                  <p className="text-neutral-300 leading-relaxed">Mises à jour ciblées, système anti-spam et notifications personnalisées.</p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div className="mt-6">
-          <Link to="/discover" className="btn-line">Voir plus →</Link>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
