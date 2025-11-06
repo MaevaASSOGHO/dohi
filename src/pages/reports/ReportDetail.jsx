@@ -212,7 +212,9 @@ export default function ReportDetail() {
       {/* Bloc média (ADAPTATIF) */}
       <div className="relative overflow-hidden rounded-2xl border border-neutral-800">
         {/* Titre + catégorie + statut */}
-              <button
+        <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-2 rounded-full bg-black/60 px-2 py-1">
+  {/* Titre → Discover filtré par entité */}
+        <button
           onClick={() => navigate(`/discover?entity=${encodeURIComponent(title)}`)}
           className="text-sm font-semibold hover:underline"
         >
