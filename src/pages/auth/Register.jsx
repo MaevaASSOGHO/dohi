@@ -48,6 +48,16 @@ export default function Register() {
     }
   };
 
+  const testLogin = async () => {
+  try {
+    const r = await api.post('/login', { email: 'test@ex.com', password: 'secret1234' });
+    alert('OK: ' + JSON.stringify(r.data));
+  } catch (e) {
+    alert('ERR: ' + (e?.response?.status || '') + ' ' + (e?.message || ''));
+  }
+};
+
+
   return (
     <div className="mx-auto max-w-md">
       <h1 className="text-2xl font-semibold mb-6">Créer un compte</h1>
