@@ -71,7 +71,7 @@ export default function Login() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const { data } = await api.post("/login", values);
+      const { data } = await api.post("/api/login", values);
       const token = data?.token || data?.access_token;
       if (token) localStorage.setItem("token", token);
       window.dispatchEvent(new Event("auth:changed")); // ⬅️ met à jour la sidebar
