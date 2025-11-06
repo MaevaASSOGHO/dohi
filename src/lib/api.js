@@ -3,40 +3,30 @@ import axios from "axios";
 
 const BASE =
   (import.meta.env.VITE_API_BASE?.replace(/\/+$/, "")) ||
-  "http://localhost:8000";              // ⬅️ plus de /api ici
+  "http://localhost:8000";   
 
 export const api = axios.create({
-  baseURL: BASE,                        // ⬅️ base nette, sans /api
-  headers: { Accept: "application/json", "Content-Type": "application/json" },
+  baseURL: BASE,
+  headers: { Accept: "application/json" },
 });
 
 console.log("API base =", BASE);
 
-// Bearer auto si présent
-api.interceptors.request.use((config) => {
+// Bearer auto
+api.interceptors.request.use((cfg) => {
   const token = localStorage.getItem("token");
   if (token) {
-    config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer ${token}`;
+    cfg.headers = cfg.headers || {};
+    cfg.headers.Authorization = `Bearer ${token}`;
   }
-  return config;
-});
-
-// 401 => purge + redirect login
-let alreadyRedirecting = false;
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    const status = err?.response?.status;
-    if (status === 401 && !alreadyRedirecting) {
-      alreadyRedirecting = true;
-      try { localStorage.removeItem("token"); } catch {}
-      const path = window.location.pathname || "";
-      if (!/\/(login|register)$/i.test(path)) window.location.assign("/login");
-      else alreadyRedirecting = false;
+  // ↙︎ n’ajoute Content-Type que si nécessaire
+  const m = (cfg.method || "get").toLowerCase();
+  const needsBody = ["post", "put", "patch"].includes(m);
+  if (needsBody && !(cfg.data instanceof FormData)) {
+    cfg.headers = cfg.headers || {};
+    if (!cfg.headers["Content-Type"]) {
+      cfg.headers["Content-Type"] = "application/json";
     }
-    return Promise.reject(err);
   }
-);
-
-export default api;
+  return cfg;
+});
