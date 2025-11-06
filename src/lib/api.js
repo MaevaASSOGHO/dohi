@@ -2,12 +2,12 @@
 import axios from "axios";
 
 const BASE =
-  import.meta.env.VITE_API_URL?.replace(/\/+$/, "") ||
+  import.meta.env.VITE_API_BASE?.replace(/\/+$/, "") ||
   "http://localhost:8000/api";
 
 export const api = axios.create({
-  baseURL: BASE,
-  headers: { Accept: "application/json" },
+  baseURL: import.meta.env.VITE_API_BASE || BASE,
+  headers: { Accept: "application/json", "Content-Type": "application/json" },
 });
 
 // Ajoute automatiquement le Bearer si présent
