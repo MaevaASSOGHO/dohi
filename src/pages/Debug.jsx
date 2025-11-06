@@ -13,8 +13,6 @@ export default function Debug() {
     alert(`status=${e?.response?.status ?? 'no-response'} url=${api.defaults.baseURL + '/api/login'}`);
   }
 };
-<button onClick={testLoginPing} className="mt-2 rounded px-3 py-1 bg-violet-700">Test URL login</button>
-
 
   useEffect(() => {
     // 1) Afficher la base API telle que vue par le front
@@ -51,6 +49,9 @@ export default function Debug() {
             <div className="text-neutral-400">Test en cours…</div>
           )}
         </div>
+
+        <button onClick={testLoginPing} className="mt-2 rounded px-3 py-1 bg-violet-700">Test URL login</button>
+
       </div>
     </main>
   );
