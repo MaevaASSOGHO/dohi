@@ -13,6 +13,7 @@ import ErrorFallback from "../components/ErrorFallback";
 import KycWizardOnly from "../pages/kyc/KycWizardOnly";
 import Notifications from "../pages/notifications/Notifications";
 import Debug from "../pages/Debug";
+import DebugData from "../pages/DebugData";
 import App from "../App";
 
 export const router = createBrowserRouter([
@@ -34,7 +35,7 @@ export const router = createBrowserRouter([
       { path: "register", element: <Register /> },
       { path: "/", element: <App />, errorElement: <ErrorFallback />,  
       },
-      { path: "debug", element: <Debug /> },
+      { path: "debug", element: <DebugData /> },
     ],
   },
 ]);
