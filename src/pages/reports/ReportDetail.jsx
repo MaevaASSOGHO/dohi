@@ -213,16 +213,28 @@ export default function ReportDetail() {
       <div className="relative overflow-hidden rounded-2xl border border-neutral-800">
         {/* Titre + catégorie + statut */}
         <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-2 rounded-full bg-black/60 px-2 py-1">
-          <button onClick={() => navigate(`/?entity=${encodeURIComponent(title)}`)} className="text-sm font-semibold hover:underline">
+          {/* Titre → Discover filtré par entité */}
+          <button
+            onClick={() => navigate(`/discover?entity=${encodeURIComponent(title)}`)}
+            className="text-sm font-semibold hover:underline"
+          >
             {title}
           </button>
-          <span className="text-[10px] uppercase tracking-wide rounded-full bg-neutral-900/70 px-2 py-0.5 border border-neutral-800">
+        
+          {/* Catégorie → Discover filtré par catégorie */}
+          <button
+            onClick={() => navigate(`/discover?category=${encodeURIComponent(category)}`)}
+            className="text-[10px] uppercase tracking-wide rounded-full bg-neutral-900/70 px-2 py-0.5 border border-neutral-800 hover:underline"
+          >
             {category}
-          </span>
+          </button>
+        
+          {/* Statut (non cliquable) */}
           <span className={`text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5 border ${statusBadgeClass(statusTxt)}`}>
             {statusLabel(statusTxt)}
           </span>
         </div>
+
 
         {/* Wrapper dont la hauteur s'ajuste à l'image courante */}
         <div
