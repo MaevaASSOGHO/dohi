@@ -28,8 +28,7 @@ export default function Register() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const REGISTER_PATH = import.meta.env.VITE_REGISTER_PATH || "/register";
-      const payload = {
+      const REGISTER_PATH = import.meta.env.VITE_REGISTER_PATH || "/api/register";      const payload = {
         name: values.name,
         email: values.email,
         password: values.password,
@@ -48,15 +47,7 @@ export default function Register() {
     }
   };
 
-  const testLogin = async () => {
-  try {
-    const r = await api.post('/login', { email: 'test@ex.com', password: 'secret1234' });
-    alert('OK: ' + JSON.stringify(r.data));
-  } catch (e) {
-    alert('ERR: ' + (e?.response?.status || '') + ' ' + (e?.message || ''));
-  }
-};
-
+  
 
   return (
     <div className="mx-auto max-w-md">
