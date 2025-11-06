@@ -2,31 +2,45 @@
 import axios from "axios";
 
 const BASE =
-  (import.meta.env.VITE_API_BASE?.replace(/\/+$/, "")) ||
-  "http://localhost:8000";   
+  import.meta.env.VITE_API_BASE?.replace(/\/+$/, "") ||
+  "http://localhost:8000/api";
 
 export const api = axios.create({
-  baseURL: BASE,
-  headers: { Accept: "application/json" },
+  baseURL: import.meta.env.VITE_API_BASE || BASE,
+  headers: { Accept: "application/json", "Content-Type": "application/json" },
 });
 
-console.log("API base =", BASE);
+// ← TEMP: log visible dans la console desktop (utile en dev)
+console.log("API base =", import.meta.env.VITE_API_BASE);
 
-// Bearer auto
-api.interceptors.request.use((cfg) => {
+// Ajoute automatiquement le Bearer si présent
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
-    cfg.headers = cfg.headers || {};
-    cfg.headers.Authorization = `Bearer ${token}`;
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  // ↙︎ n’ajoute Content-Type que si nécessaire
-  const m = (cfg.method || "get").toLowerCase();
-  const needsBody = ["post", "put", "patch"].includes(m);
-  if (needsBody && !(cfg.data instanceof FormData)) {
-    cfg.headers = cfg.headers || {};
-    if (!cfg.headers["Content-Type"]) {
-      cfg.headers["Content-Type"] = "application/json";
-    }
-  }
-  return cfg;
+  return config;
 });
+
+// 401 => purge token + redirection /login
+let alreadyRedirecting = false;
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const status = err?.response?.status;
+    if (status === 401 && !alreadyRedirecting) {
+      alreadyRedirecting = true;
+      try { localStorage.removeItem("token"); } catch {}
+      const path = window.location.pathname || "";
+      if (!/\/(login|register)$/i.test(path)) {
+        window.location.assign("/login");
+      } else {
+        alreadyRedirecting = false;
+      }
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default api;
