@@ -28,7 +28,8 @@ export default function Register() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const REGISTER_PATH = import.meta.env.VITE_REGISTER_PATH || "/api/register";      const payload = {
+      const REGISTER_PATH = import.meta.env.VITE_REGISTER_PATH || "/register";
+      const payload = {
         name: values.name,
         email: values.email,
         password: values.password,
@@ -38,13 +39,17 @@ export default function Register() {
       const token = data?.token || data?.access_token || null;
       if (token) localStorage.setItem("token", token);
       navigate("/", { replace: true }); // ou navigate("/login") selon ton flow
-    } catch (err) {
-      const msg = err?.response?.data?.message || "Inscription impossible. Réessaie.";
-      const firstError =
-        err?.response?.data?.errors &&
-        Object.values(err.response.data.errors).flat()[0];
-      setServerError(firstError || msg);
-    }
+    } catch (e) {
+        const status = e?.response?.status;
+        const firstError =
+          e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
+        setServerError(
+          firstError ||
+          e?.response?.data?.message ||
+          `Erreur (status ${status || 'no-response'})`
+        );
+      }
+        
   };
 
   

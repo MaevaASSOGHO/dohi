@@ -11,7 +11,7 @@ function ForgotPasswordModal({ open, onClose }) {
   async function onSubmit(values) {
     setMsg(null); setErr(null);
     try {
-      await api.post("/api/password/forgot", values);
+      await api.post("/password/forgot", values);
       setMsg("Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.");
     } catch (e) {
       const m = e?.response?.data?.message || "Impossible d’envoyer le lien pour le moment.";
@@ -71,15 +71,21 @@ export default function Login() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const { data } = await api.post("/api/login", values);
+      const { data } = await api.post("/login", values);
       const token = data?.token || data?.access_token;
       if (token) localStorage.setItem("token", token);
       window.dispatchEvent(new Event("auth:changed")); // ⬅️ met à jour la sidebar
       const dest = state?.from || "/feed";
       navigate(dest, { replace: true });
     } catch (e) {
-      const msg = e?.response?.data?.message || "Identifiants invalides.";
-      setServerError(msg);
+      const status = e?.response?.status;
+      const firstError =
+        e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
+      setServerError(
+        firstError ||
+        e?.response?.data?.message ||
+        `Erreur (status ${status || 'no-response'})`
+      );
     }
   };
 

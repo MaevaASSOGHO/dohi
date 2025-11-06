@@ -5,6 +5,16 @@ export default function Debug() {
   const [env, setEnv] = useState("");
   const [ping, setPing] = useState(null);
   const [err, setErr] = useState("");
+  const testLoginPing = async () => {
+  try {
+    const r = await api.post('/api/login', { email:'x', password:'y' });
+    alert('OK ' + JSON.stringify(r.data));
+  } catch (e) {
+    alert(`status=${e?.response?.status ?? 'no-response'} url=${api.defaults.baseURL + '/api/login'}`);
+  }
+};
+<button onClick={testLoginPing} className="mt-2 rounded px-3 py-1 bg-violet-700">Test URL login</button>
+
 
   useEffect(() => {
     // 1) Afficher la base API telle que vue par le front

@@ -2,18 +2,17 @@
 import axios from "axios";
 
 const BASE =
-  import.meta.env.VITE_API_BASE?.replace(/\/+$/, "") ||
-  "http://localhost:8000/api";
+  (import.meta.env.VITE_API_BASE?.replace(/\/+$/, "")) ||
+  "http://localhost:8000";              // ⬅️ plus de /api ici
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || BASE,
+  baseURL: BASE,                        // ⬅️ base nette, sans /api
   headers: { Accept: "application/json", "Content-Type": "application/json" },
 });
 
-// ← TEMP: log visible dans la console desktop (utile en dev)
-console.log("API base =", import.meta.env.VITE_API_BASE);
+console.log("API base =", BASE);
 
-// Ajoute automatiquement le Bearer si présent
+// Bearer auto si présent
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -23,7 +22,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 401 => purge token + redirection /login
+// 401 => purge + redirect login
 let alreadyRedirecting = false;
 api.interceptors.response.use(
   (res) => res,
@@ -33,11 +32,8 @@ api.interceptors.response.use(
       alreadyRedirecting = true;
       try { localStorage.removeItem("token"); } catch {}
       const path = window.location.pathname || "";
-      if (!/\/(login|register)$/i.test(path)) {
-        window.location.assign("/login");
-      } else {
-        alreadyRedirecting = false;
-      }
+      if (!/\/(login|register)$/i.test(path)) window.location.assign("/login");
+      else alreadyRedirecting = false;
     }
     return Promise.reject(err);
   }
