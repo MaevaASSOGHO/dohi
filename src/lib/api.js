@@ -48,37 +48,49 @@ api.interceptors.response.use(
   (res) => {
     try {
       const fullUrl = (res.config?.baseURL || "") + (res.config?.url || "");
-      // On ne normalise QUE ces endpoints:
       const isFeed = /\/api\/feed(?:\b|\/|\?)/.test(fullUrl);
       const isDiscover = /\/api\/discover(?:\b|\/|\?)/.test(fullUrl);
 
       if (isFeed || isDiscover) {
         let data = res.data;
 
-        // 1) Si le back renvoie { items: [...] }, on remplace par [...]
-        if (data && !Array.isArray(data) && Array.isArray(data.items)) {
-          data = data.items;
-        }
-
-        // 2) Alias 'cover' pour compat front historique
+        // --- Normaliser la liste d'items quel que soit le format d'entrée ---
+        let items;
         if (Array.isArray(data)) {
-          data = data.map((row) => {
-            const r = row && typeof row === "object" ? { ...row } : row;
-            if (r && typeof r === "object") {
-              const thumbUrl =
-                r?.thumb?.url ??
-                r?.thumb_url ??
-                r?.image_url ??
-                null;
-
-              if (r.cover == null) r.cover = thumbUrl;
-              if (r.image_url == null) r.image_url = r.cover ?? null;
-            }
-            return r;
-          });
+          // back renvoie déjà un tableau
+          items = data;
+        } else if (data && Array.isArray(data.items)) {
+          // back renvoie { items, page, total }
+          items = data.items;
+        } else {
+          items = []; // forme inattendue
         }
 
-        res.data = data;
+        // --- Alias d'image pour l'ancien front (cover / image_url) ---
+        items = items.map((row) => {
+          const r = row && typeof row === "object" ? { ...row } : row;
+          if (r && typeof r === "object") {
+            const thumbUrl = r?.thumb?.url ?? r?.thumb_url ?? r?.image_url ?? null;
+            if (r.cover == null) r.cover = thumbUrl;
+            if (r.image_url == null) r.image_url = r.cover ?? null;
+          }
+          return r;
+        });
+
+        // --- ***DIFFÉRENTIEL ENTRE FEED ET DISCOVER*** ---
+        if (isFeed) {
+          // Le composant Feed attend { items, page, total }
+          // Si le back a renvoyé un tableau, on le re-emballe proprement :
+          if (!data || !Array.isArray(data.items)) {
+            res.data = { items, page: 1, total: items.length };
+          } else {
+            // Le back avait déjà { items, ... } → on remplace juste items normalisés
+            res.data = { ...data, items };
+          }
+        } else {
+          // Discover attend un tableau simple
+          res.data = items;
+        }
       }
     } catch {
       // pas de panique si la normalisation échoue
