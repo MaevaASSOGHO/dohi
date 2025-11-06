@@ -10,6 +10,9 @@ export const api = axios.create({
   headers: { Accept: "application/json", "Content-Type": "application/json" },
 });
 
+// ← TEMP: log visible dans la console desktop (utile en dev)
+console.log("API base =", import.meta.env.VITE_API_BASE);
+
 // Ajoute automatiquement le Bearer si présent
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
