@@ -93,6 +93,7 @@ export default function KycWizard() {
         <StatusBadge status={status} />
         {status === "pending" && (
           <button
+            type="button"
             onClick={cancelPending}
             disabled={busy}
             className="text-xs rounded border px-2 py-1
@@ -130,6 +131,7 @@ export default function KycWizard() {
           </Field>
 
           <button
+            type="submit"
             disabled={busy || status==='pending'}
             className="rounded bg-white px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"

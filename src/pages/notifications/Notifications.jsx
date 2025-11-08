@@ -52,6 +52,7 @@ export default function NotificationsPage() {
           </select>
 
           <button
+            type="button"
             onClick={markAllRead}
             className="rounded border px-3 py-1 text-sm
                        border-neutral-300 text-neutral-700 hover:bg-neutral-50

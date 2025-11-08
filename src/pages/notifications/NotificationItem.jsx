@@ -39,6 +39,7 @@ export default function NotificationItem({ n, onToggleRead }) {
       </div>
 
       <button
+        type="button"
         onClick={onToggleRead}
         className="text-xs rounded border px-2 py-1
                    border-neutral-300 text-neutral-700 hover:bg-neutral-50

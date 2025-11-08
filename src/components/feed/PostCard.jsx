@@ -6,21 +6,53 @@ import { statusLabel, statusBadgeClass } from "../../lib/reportStatus";
 import UniformMedia from "./UniformMedia";
 
 // Icônes inline (inchangées)
-const IconThumbUp = ({ className = "", ...p }) => (
-  <svg {...p} className={className} viewBox="0 0 24 24" fill="none">
-    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+const ICON_VIOLET = "#7c3aed";
+
+const IconThumbUp = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" />
+    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" />
   </svg>
 );
-const IconThumbDown = ({ className = "", ...p }) => (
-  <svg {...p} className={className} viewBox="0 0 24 24" fill="none" style={{ transform: "scaleY(-1)" }}>
-    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+
+const IconThumbDown = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ transform: "scaleY(-1)" }}
+  >
+    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" />
+    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" />
   </svg>
 );
-const IconComment = ({ className = "", ...p }) => (
-  <svg {...p} className={className} viewBox="0 0 24 24" fill="none">
-    <path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1 3 3H9l-5 5V6z" stroke="currentColor" strokeWidth="1.5"/>
+
+const IconComment = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1 3 3H9l-5 5V6z" />
   </svg>
 );
 
@@ -149,7 +181,7 @@ export default function PostCard({
 
         <Tip label="Vote utile">
           <button
-            type="button"
+            type="btn-vote"
             onClick={onVoteUseful}
             className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote === "u" ? "text-violet-600 dark:text-violet-400" : ""}`}
             disabled={!reportId}
@@ -161,7 +193,7 @@ export default function PostCard({
 
         <Tip label="Vote pas utile">
           <button
-            type="button"
+            type="btn-vote"
             onClick={onVoteNotUseful}
             className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote === "n" ? "text-violet-600 dark:text-violet-400" : ""}`}
             disabled={!reportId}
@@ -175,7 +207,7 @@ export default function PostCard({
 
         <Tip label={`${commentsCnt} commentaires`}>
           <button
-            type="button"
+            type="btn-vote"
             onClick={() => setOpenComments((v) => !v)}
             className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white"
             disabled={!reportId}

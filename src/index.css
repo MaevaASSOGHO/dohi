@@ -78,6 +78,12 @@ button:active, [type="button"]:active, [type="submit"]:active, [role="button"]:a
 { background: rgb(64 64 64); 
   transform: translateY(1px); 
 } 
+.btn-vote
+{ display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  background: transparent;
+}
 
 /* Bouton "ghost" sombre */ 
 .btn-ghost 
