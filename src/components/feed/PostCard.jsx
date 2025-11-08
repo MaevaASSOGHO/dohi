@@ -111,6 +111,7 @@ export default function PostCard({
         {/* Badges en haut-gauche (plus petits) */}
         <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/55 px-2 py-1 backdrop-blur-sm">
           <button
+            type="button"
             onClick={goSearchReports}
             className="inline-flex items-center rounded border px-3 py-1 text-sm
                        border-neutral-300 text-neutral-700 hover:bg-neutral-50
@@ -148,6 +149,7 @@ export default function PostCard({
 
         <Tip label="Vote utile">
           <button
+            type="button"
             onClick={onVoteUseful}
             className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote === "u" ? "text-violet-600 dark:text-violet-400" : ""}`}
             disabled={!reportId}
@@ -159,6 +161,7 @@ export default function PostCard({
 
         <Tip label="Vote pas utile">
           <button
+            type="button"
             onClick={onVoteNotUseful}
             className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote === "n" ? "text-violet-600 dark:text-violet-400" : ""}`}
             disabled={!reportId}
