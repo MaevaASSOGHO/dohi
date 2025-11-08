@@ -79,6 +79,53 @@ const IconVerifyId = ({ className = "h-5 w-5" }) => (
   </svg>
 );
 
+function useTheme() {
+  // 1) Lire préférence (localStorage > système)
+  const getInitial = () => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  };
+
+  const [theme, setTheme] = useState(getInitial);
+
+  // 2) Appliquer sur <html> + persister
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  // 3) Toggle
+  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
+  return { theme, toggle };
+}
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? "Basculer en thème clair" : "Basculer en thème sombre"}
+      className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm 
+                 border border-neutral-300 dark:border-neutral-700
+                 bg-white/70 backdrop-blur dark:bg-neutral-900/60
+                 hover:bg-white dark:hover:bg-neutral-800
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
+                 transition"
+      title={isDark ? "Thème clair" : "Thème sombre"}
+    >
+      <span className="text-base">{isDark ? "☀️" : "🌙"}</span>
+      <span className="hidden sm:inline">{isDark ? "Clair" : "Sombre"}</span>
+    </button>
+  );
+}
 export default function App() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -88,16 +135,16 @@ export default function App() {
   const [isSmall, setIsSmall] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 639px)").matches : false
   );
-  const [sidebarOpen, setSidebarOpen] = useState(() => !isSmall);
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 639px)");
-    const onChange = () => {
-      setIsSmall(mql.matches);
-      setSidebarOpen(!mql.matches); // auto : ouverte en desktop, fermée en mobile
-    };
-    mql.addEventListener?.("change", onChange);
-    return () => mql.removeEventListener?.("change", onChange);
-  }, []);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+useEffect(() => {
+  const mql = window.matchMedia("(max-width: 639px)");
+  const onChange = () => {
+    setIsSmall(mql.matches);
+    // Supprimé le comportement auto : ne change plus l'état sidebarOpen automatiquement
+  };
+  mql.addEventListener?.("change", onChange);
+  return () => mql.removeEventListener?.("change", onChange);
+}, []);
 
   const nav = [
     { to: "/", label: "Accueil", icon: IconFeed },
@@ -120,13 +167,19 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-dvh bg-black text-neutral-100">
-      {/* HEADER VIOLET FIXE (hamburger à gauche, logo centré) */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-violet-900 border-b border-violet-800/50 backdrop-blur">
-       <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8 h-16 sm:h-20 grid grid-cols-[auto_1fr_auto] items-center">
+    <div className="min-h-dvh w-full bg-white text-neutral-900 dark:bg-black dark:text-neutral-100">
+      {/* HEADER */}
+      <header
+        className="fixed inset-x-0 top-0 z-50 border-b backdrop-blur
+                    bg-violet-900/80 dark:bg-violet-900/80
+                    border-violet-200/50 dark:border-neutral-800/50"
+        role="banner"
+      >
+        <div className="mx-auto max-w-[1200px] px-4 h-14 flex items-center justify-between">
           {/* Hamburger dans le header */}
-          <div className="flex items-center">
-            <HamburgerButton onClick={() => setSidebarOpen(v => !v)} />
+          <div className="flex items-center gap-3">
+            <HamburgerButton onClick={() => setSidebarOpen(v => !v)} aria-label="Ouvrir/fermer le menu" />
+            
           </div>
 
           {/* Logo centré (légèrement plus grand) */}
@@ -140,15 +193,14 @@ export default function App() {
             </Link>
           </div>
 
-          {/* Espace à droite (réservé si plus tard on met un bouton) */}
-          <div />
+          <div className="flex items-center gap-3 mr-4 sm:mr-6">
+           <ThemeToggle />
+          </div>
         </div>
       </header>
-
-      {/* OVERLAY sous le header (ne cache ni le logo ni le hamburger) */}
       {sidebarOpen && (
         <div
-          className="fixed inset-x-0 bottom-0 z-30 bg-black/40 backdrop-blur pointer-events-none"
+          className="fixed inset-x-0 bottom-0 z-30 bg-white/70 dark:bg-black/40 backdrop-blur pointer-events-none"
           style={{ top: '5rem' }} // ≈ h-20 (80px) pour coller au nouveau header
         />
       )}
@@ -164,20 +216,31 @@ export default function App() {
         aria-label="Menu latéral"
       >
         <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8">
-          <div className="rounded-b-xl border-x border-b border-neutral-800/70 bg-neutral-950/90 backdrop-blur">
+          <div className="rounded-b-xl border-x border-b backdrop-blur
+                          bg-violet-100/90 dark:bg-neutral-950/90
+                          border-neutral-200/70 dark:border-neutral-800/70">
             {/* Bandeau top interne (login/logout) */}
-            <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-800/60">
+            <div className="flex items-center gap-2 px-3 py-3 border-b  border-neutral-200/60 dark:border-neutral-800/60">
               {!isAuthenticated ? (
                 <Link
                   to="/login"
-                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
-                >
+                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
+                              ring-1 ring-neutral-300 dark:ring-neutral-700
+                              hover:bg-neutral-100 dark:hover:bg-neutral-800/50
+                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
+                              transition"
+                              aria-label="Se connecter">
                   <IconLogin /><span>Se connecter</span>
                 </Link>
               ) : (
                 <button
                   onClick={handleLogout}
-                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md ring-1 ring-neutral-700 hover:bg-neutral-800/50 transition"
+                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
+                              ring-1 ring-neutral-300 dark:ring-neutral-700
+                              hover:bg-neutral-100 dark:hover:bg-neutral-800/50
+                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
+                              transition"
+                              aria-label="Se déconnecter"
                 >
                   <span>Se déconnecter</span>
                 </button>
@@ -185,14 +248,16 @@ export default function App() {
             </div>
 
             {/* Navigation */}
-            <nav id="sidebar-nav" className="py-2">
+            <nav id="sidebar-nav" className="py-2"role="navigation" aria-label="Navigation principale">
               <ul className="space-y-1">
                 {nav.map((item) => {
                   const Active = pathname === item.to;
                   const Icon = item.icon;
                   const classes = [
                     "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
-                    Active ? "bg-neutral-800/70 ring-1 ring-neutral-700" : "hover:bg-neutral-900/60",
+                    Active 
+                      ? "ring-1 bg-neutral-200/70 ring-neutral-300 dark:bg-neutral-800/70 dark:ring-neutral-700"
+                      : "hover:bg-neutral-100 dark:hover:bg-neutral-900/60",
                   ].join(" ");
                   return (
                     <li key={item.to}>
@@ -218,7 +283,7 @@ export default function App() {
 
       {/* CONTENU (passe sous le header) */}
       <div className={`pt-20 sm:pt-24 ${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
-        <main className="bg-neutral-950/60 backdrop-blur px-3 sm:px-6 md:px-8 pt-3 sm:pt-4 pb-6 min-h-[60dvh]">
+        <main className="mx-auto max-w-[1200px] px-4 py-6"role="main" aria-label="Contenu principal">
           <div className="outlet-stretcher min-w-0">
             <Outlet />
           </div>

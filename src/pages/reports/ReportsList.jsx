@@ -1,3 +1,4 @@
+// src/pages/reports/ReportsList.jsx
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef } from "react";
@@ -82,35 +83,74 @@ export default function ReportsList() {
 
   return (
     <div className="mx-auto w-full max-w-3xl p-2 space-y-3">
+      {/* Bouton retour — pas de background, texte noir (light) / blanc (dark), hover bordure violette */}
+      <button
+  onClick={() => navigate(-1)}
+  className="btn-plain text-neutral-900 dark:text-neutral-100 mb-2"
+>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+  Retour
+</button>
+
+
       {/* Barre de filtres */}
       <form onSubmit={submitSearch} className="flex flex-wrap items-center gap-2">
         <input
           name="q"
           defaultValue={qEffective}
           placeholder={qEffective ? `Recherche : "${qEffective}"` : "Rechercher…"}
-          className="min-w-0 flex-1 rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+          className="min-w-0 flex-1 rounded border border-neutral-300 dark:border-neutral-700
+                     bg-white dark:bg-neutral-900
+                     text-neutral-900 dark:text-neutral-100
+                     placeholder:text-neutral-400
+                     px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-violet-500/40"
         />
+
         <div className="flex items-center gap-1 text-xs">
           <button
             type="button"
             onClick={() => setStatus("")}
-            className={`rounded px-2 py-1 border ${status==="" ? "bg-white text-black" : "border-neutral-700 hover:bg-neutral-900"}`}
-          >Tous</button>
+            className={`rounded px-2 py-1 border ${
+              status===""
+                ? "bg-white text-black"
+                : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40`}
+          >
+            Tous
+          </button>
+
           <button
             type="button"
             onClick={() => setStatus("verified")}
-            className={`rounded px-2 py-1 border ${status==="verified" ? "bg-white text-black" : "border-neutral-700 hover:bg-neutral-900"}`}
-          >Vérifiés</button>
+            className={`rounded px-2 py-1 border ${
+              status==="verified"
+                ? "bg-white text-black"
+                : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40`}
+          >
+            Vérifiés
+          </button>
+
           <button
             type="button"
             onClick={() => setStatus("in_review")}
-            className={`rounded px-2 py-1 border ${status==="in_review" ? "bg-white text-black" : "border-neutral-700 hover:bg-neutral-900"}`}
-          >En revue</button>
+            className={`rounded px-2 py-1 border ${
+              status==="in_review"
+                ? "bg-white text-black"
+                : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40`}
+          >
+            En revue
+          </button>
         </div>
+
         {/* Affiche le critère si on vient du feed ou si une recherche est saisie */}
         {(qEffective) && (
-          <div className="ml-auto text-xs text-neutral-400">
-            Recherche : <span className="font-medium text-neutral-200">{qEffective}</span>
+          <div className="ml-auto text-xs text-neutral-600 dark:text-neutral-400">
+            Recherche : <span className="font-medium text-neutral-900 dark:text-neutral-200">{qEffective}</span>
             <button
               type="button"
               onClick={() => {
@@ -119,7 +159,7 @@ export default function ReportsList() {
                 n.delete("q");
                 setSearchParams(n, { replace:true });
               }}
-              className="ml-2 underline"
+              className="ml-2 underline underline-offset-2 hover:opacity-80"
             >
               effacer
             </button>
@@ -129,15 +169,27 @@ export default function ReportsList() {
 
       {/* Liste + scroll box */}
       <div ref={listRef} className="max-h-[70vh] overflow-auto space-y-2">
-        {isLoading && <div className="rounded-xl border border-neutral-800 p-3 text-sm text-neutral-400">Chargement…</div>}
+        {isLoading && (
+          <div className="rounded-xl border p-3 text-sm
+                          border-neutral-300 text-neutral-600
+                          dark:border-neutral-800 dark:text-neutral-400">
+            Chargement…
+          </div>
+        )}
+
         {isError && (
-          <div className="rounded-xl border border-neutral-800 p-3 text-sm text-red-300">
-            Erreur{error?.response?.status?` (${error.response.status})`:""}. <button onClick={()=>refetch()} className="underline">Réessayer</button>
+          <div className="rounded-xl border p-3 text-sm
+                          border-red-300 bg-red-50 text-red-800
+                          dark:border-neutral-800 dark:bg-neutral-900/40 dark:text-red-300">
+            Erreur{error?.response?.status?` (${error.response.status})`:""}.{" "}
+            <button onClick={()=>refetch()} className="underline underline-offset-2 hover:opacity-80">Réessayer</button>
           </div>
         )}
 
         {!isLoading && items.length === 0 && (
-          <div className="rounded-xl border border-neutral-800 p-3 text-sm text-neutral-400">
+          <div className="rounded-xl border p-3 text-sm
+                          border-neutral-300 text-neutral-600
+                          dark:border-neutral-800 dark:text-neutral-400">
             {entity ? "Aucun signalement pour cette entité." : "Aucun signalement."}
           </div>
         )}
@@ -151,7 +203,11 @@ export default function ReportsList() {
             <button
               disabled={isFetchingNextPage}
               onClick={()=>fetchNextPage()}
-              className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900 disabled:opacity-60"
+              className="rounded border px-3 py-1 text-sm
+                         border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                         disabled:opacity-60
+                         dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
             >
               {isFetchingNextPage ? "Chargement…" : "Charger plus"}
             </button>

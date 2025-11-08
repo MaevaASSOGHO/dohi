@@ -2,30 +2,26 @@
    Tout le layout/spacing est géré par Tailwind dans App.jsx. */
 
 /* --- Hauteur et fond noirs globaux, suppression des marges par défaut --- */
-html, body, #root {
-  height: 100%;
-  background: #000;
-  max-width: 100%; overflow-x: hidden;
-}
-body { margin: 0;
-       max-width: 100%; 
-       overflow-x: hidden; }
-
-/* --- Le shell occupe tout l’écran (utile si tu changes la structure) --- */
-.app-shell {
-  min-height: 100dvh; /* prend toute la hauteur de l’écran */
-  background: #000;
-  color: #e5e7eb; /* text-neutral-200 approximatif */
-}
-
-/* --- Forcer le panneau de contenu à s’étirer en hauteur --- */
-#app-main {            /* le <main> englobant */
-  min-height: calc(100dvh - 4rem); /* 4rem ≈ barre du haut de 64px */
+#root {
   display: flex;
   flex-direction: column;
+  align-items: stretch; /* ← au lieu de center */
+  width: 100%;         /* ← force le full width */
+
 }
 
-/* Toutes les images se réduisent correctement */
+body { 
+  margin: 0;
+  max-width: 100%; 
+  overflow-x: hidden;
+}
+
+/* --- FORCER LE CENTRAGE GLOBAL --- */
+#root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 /* Images et médias fluides */
 img, video, canvas, svg {
@@ -34,7 +30,6 @@ img, video, canvas, svg {
 }
 
 /* Évite les min-width rigides héritées */
-.outlet-stretcher,
 [class*="container"] {
   min-width: 0;
 }
@@ -52,48 +47,18 @@ button, input, select, textarea {
   min-width: 0;
 }
 
-/* Fixe d’éléments sticky/fixed : aider le scroll en iOS */
+/* Fixe d'éléments sticky/fixed : aider le scroll en iOS */
 :root {
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 }
-.sticky-safe {
-  top: calc(4rem + var(--safe-top, 0px)); /* ajuste selon ta topbar */
-}
 
-/* Grilles génériques (fallback si composant oublié) */
-.grid-autofit {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 1rem;
-}
-
-/* Réduit le “tap highlight” gênant sur mobile */
+/* Réduit le "tap highlight" gênant sur mobile */
 * { -webkit-tap-highlight-color: rgba(0,0,0,0); }
 
 /* Évite les min-width rigides posées par erreur */
 [class*="container"] {
   min-width: 0;
-}
-
-/* Ce wrapper entoure <Outlet/> pour que l’enfant prenne toute la hauteur */
-.outlet-stretcher {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-}
-
-/* Le premier enfant (ta page) s’étire sur la hauteur restante */
-.outlet-stretcher > * {
-  flex: 1;
-  min-height: 100%;
-}
-
-/* Optionnel : éviter que certains containers internes rétrécissent trop */
-.fill-viewport {
-  min-height: 100%;
 }
 
 /* Si certaines pages avaient un fond différent, on force un fond noir */
@@ -103,7 +68,6 @@ button, input, select, textarea {
   border: 1px solid #262626; /* neutral-800 */
   border-radius: 1rem;        /* rounded-2xl */
 }
-
 
 /* Petite barre visuelle pour le bouton de toggle (trois traits) */
 .i-bar {
@@ -125,6 +89,7 @@ button, input, select, textarea {
 .i-bar::after {
   bottom: -8px;
 }
+
 /* === Boutons : neutraliser les styles mobiles qui virent en blanc === */
 button,
 [type="button"],
@@ -141,7 +106,6 @@ button:hover,
 [type="button"]:hover,
 [type="submit"]:hover,
 [role="button"]:hover {
-  background: rgb(38 38 38);
   border-color: rgb(82 82 82);
 }
 button:active,
@@ -164,7 +128,7 @@ button:active,
 .btn-dark:hover { background: rgb(38 38 38); border-color: rgb(82 82 82); }
 .btn-dark:active { background: rgb(64 64 64); transform: translateY(1px); }
 
-/* Bouton “ghost” sombre */
+/* Bouton "ghost" sombre */
 .btn-ghost {
   display:inline-flex; align-items:center; gap:.5rem;
   padding:.6rem .9rem; border-radius:.6rem;
@@ -194,12 +158,12 @@ select:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 1000px #0a0a0a inset;
   transition: background-color 9999s ease-in-out 0s;
 }
-/* Dans App.css - ajoute ces règles */
+
+/* Animation optionnelle pour le bouton hamburger */
 .hamburger-line {
   transition: all 0.3s ease;
 }
 
-/* Animation optionnelle pour le bouton hamburger */
 .hamburger-active .hamburger-line:nth-child(1) {
   transform: rotate(45deg) translate(6px, 6px);
 }
@@ -226,8 +190,33 @@ select:-webkit-autofill {
   padding-top: 0.5rem;
 }
 
+/* Bouton neutre qui n'hérite PAS des styles globaux */
+.btn-plain {
+  all: unset;                 /* on repart de zéro (ignore les règles globales) */
+  display: inline-flex;
+  align-items: center;
+  gap: .375rem;
+  padding: .750rem;
+  margin: 1rem;
+  border-radius: .375rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: inherit;             /* noir en light, blanc en dark via le parent/html.dark */
+  line-height: 1;
+}
+
+/* Effets accessibles (peuvent coexister avec tes classes Tailwind) */
+.btn-plain:hover       { border-color: rgb(139 92 246); } /* violet-500 */
+.btn-plain:focus-visible{
+  outline: 2px solid rgba(139,92,246,.4);
+  outline-offset: 2px;
+  border-color: rgb(139 92 246);
+}
+
 @media (min-width: 640px) {
   .compact-layout {
     padding-top: 1rem;
   }
 }
+
+/* SUPPRESSION des règles problématiques */

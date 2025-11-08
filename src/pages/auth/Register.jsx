@@ -55,11 +55,11 @@ export default function Register() {
   
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="text-2xl font-semibold mb-6">Créer un compte</h1>
+    <div className="mx-auto max-w-md rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/60 p-6 backdrop-blur-sm">
+      <h1 className="text-2xl font-semibold mb-6 text-neutral-900 dark:text-neutral-100">Créer un compte</h1>
 
       {serverError ? (
-        <div className="mb-4 rounded border border-red-800 bg-red-900/30 p-3 text-sm text-red-200">
+        <div className="mb-4 rounded border border-red-300 dark:border-red-800 bg-red-100 dark:bg-red-900/30 p-3 text-sm text-red-700 dark:text-red-200">
           {serverError}
         </div>
       ) : null}
@@ -69,11 +69,11 @@ export default function Register() {
           <label className="block text-sm mb-1">Nom / Pseudo</label>
           <input
             {...register("name")}
-            className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-neutral-900 dark:text-neutral-100"
             placeholder="Ex. Meezy"
             autoComplete="name"
           />
-          {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>}
+          {errors.name && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>}
         </div>
 
         <div>
@@ -100,7 +100,7 @@ export default function Register() {
             <button
               type="button"
               onClick={() => setShowPwd((s) => !s)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-200"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
               aria-label={showPwd ? "Masquer le mot de passe" : "Afficher le mot de passe"}
             >
               {showPwd ? (
@@ -158,13 +158,13 @@ export default function Register() {
 
         <button
           disabled={isSubmitting}
-          className="w-full rounded bg-white px-4 py-2 font-medium text-black hover:opacity-90 disabled:opacity-60"
+          className="w-full rounded bg-neutral-900 dark:bg-white px-4 py-2 font-medium text-white dark:text-black hover:opacity-90 disabled:opacity-60"
         >
           {isSubmitting ? "Création en cours…" : "Créer mon compte"}
         </button>
 
-        <p className="text-sm text-neutral-400">
-          Déjà un compte ? <Link to="/login" className="underline">Se connecter</Link>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Déjà un compte ? <Link to="/login" className="underline text-neutral-900 dark:text-neutral-300 hover:text-neutral-700 dark:hover:text-white">Se connecter</Link>
         </p>
       </form>
     </div>

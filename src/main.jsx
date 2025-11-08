@@ -5,6 +5,7 @@ import { router } from "./routes/router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import "./index.css";
+import "./tailwind.css";
 
 console.log("VITE_API_BASE (boot) =", import.meta.env.VITE_API_BASE);
 

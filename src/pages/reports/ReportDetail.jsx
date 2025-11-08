@@ -1,9 +1,9 @@
 // src/pages/reports/ReportDetail.jsx
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import InlineComments from "../../components/feed/InlineComments";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { statusLabel, statusBadgeClass } from "../../lib/reportStatus";
 
 // Icônes
@@ -21,14 +21,14 @@ const IconThumbDown = ({active, ...p})=>(
     <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
-const IconComment = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H9l-5 5V6z" stroke="currentColor" strokeWidth="1.5"/></svg>);
+const IconComment = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1 3 3H9l-5 5V6z" stroke="currentColor" strokeWidth="1.5"/></svg>);
 const IconPlus = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>);
 
 // Tooltip
 const Tip = ({label, children}) => (
   <div className="relative group inline-flex items-center">
     {children}
-    <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-black/80 px-2 py-0.5 text-[10px] text-neutral-200 opacity-0 transition-opacity group-hover:opacity-100">
+    <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-white dark:bg-black/80 px-2 py-0.5 text-[10px] text-neutral-900 dark:text-neutral-200 opacity-0 transition-opacity group-hover:opacity-100 border border-neutral-200 dark:border-neutral-800">
       {label}
     </div>
   </div>
@@ -52,6 +52,7 @@ function timeAgo(iso){
 
 export default function ReportDetail() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: idParam } = useParams();
   const reportId = Number(idParam);
   const [searchParams] = useSearchParams();
@@ -64,8 +65,6 @@ export default function ReportDetail() {
   });
 
   const r = data?.report;
-  const entityName = r?.entityName ?? null;
-  const canAdd = !!r;
 
   // Normalisation
   const title       = r?.title ?? r?.entityName ?? r?.type ?? "Entité";
@@ -73,6 +72,22 @@ export default function ReportDetail() {
   const at          = r?.at ?? r?.created_at ?? r?.createdAt;
   const description = r?.description ?? r?.excerpt ?? "";
   const statusTxt   = r?.status || "new";
+
+  // Terme de recherche vers ReportsList (et non Discover)
+  const searchQ = useMemo(() => (r ? (r.title || r.entityName || r.type || "").trim() : ""), [r]);
+  const goSearchReports = () => {
+    const params = new URLSearchParams();
+    if (searchQ) params.set("q", searchQ);
+    navigate({ pathname: "/reports", search: `?${params.toString()}` }, { replace: false });
+  };
+
+  // 👉 Catégorie : même logique que le titre → /reports?q=<category>
+  const goSearchByCategory = () => {
+    const q = (category || "").trim();
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    navigate({ pathname: "/reports", search: `?${params.toString()}` }, { replace: false });
+  };
 
   // Attachments
   const attachments =
@@ -129,7 +144,6 @@ export default function ReportDetail() {
     const ro = new ResizeObserver(onResize);
     if (wrapRef.current) ro.observe(wrapRef.current);
     return () => { window.removeEventListener("resize", onResize); ro.disconnect(); };
-    // eslint-disable-next-line
   }, []);
 
   const onScroll = () => {
@@ -156,8 +170,7 @@ export default function ReportDetail() {
     if (!r) return;
     setUseful(r?.usefulCount ?? r?.upvotes_count ?? r?.upvotes ?? 0);
     setNotUseful(r?.notUsefulCount ?? r?.downvotes_count ?? r?.downvotes ?? 0);
-    // eslint-disable-next-line
-  }, [r?.usefulCount, r?.notUsefulCount, r?.upvotes_count, r?.downvotes_count]);
+  }, [r?.usefulCount, r?.notUsefulCount, r?.upvotes_count, r?.downvotes_count, r]);
 
   async function doVote(wantedUseful) {
     if (!reportId) return;
@@ -194,58 +207,78 @@ export default function ReportDetail() {
     });
   }
 
-  const reportsCnt  = r?.reportsCount ?? 1;
-  const validCnt    = r?.validationsCount ?? 0;
   const commentsCnt = r?.commentsCount ?? 0;
 
-  if (isLoading) return <div className="p-4 text-sm text-neutral-400">Chargement…</div>;
+  if (isLoading) return <div className="p-4 text-sm text-neutral-600 dark:text-neutral-400">Chargement…</div>;
   if (isError)   return (
-    <div className="p-4 text-sm text-red-300">
+    <div className="p-4 text-sm text-red-600 dark:text-red-300">
       Impossible de charger le dossier{error?.response?.status?` (${error.response.status})`:""}.
       <button className="ml-2 underline" onClick={()=>refetch()}>Réessayer</button>
     </div>
   );
-  if (!r) return <div className="p-4 text-sm text-neutral-400">Dossier introuvable.</div>;
+  if (!r) return <div className="p-4 text-sm text-neutral-600 dark:text-neutral-400">Dossier introuvable.</div>;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4 p-2">
+      <button
+        onClick={() => navigate(-1)}
+        className="btn-plain text-neutral-900 dark:text-neutral-100"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Retour
+      </button>
+
+
       {/* Bloc média (ADAPTATIF) */}
-      <div className="relative overflow-hidden rounded-2xl border border-neutral-800">
+      <div className="relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800">
         {/* Titre + catégorie + statut */}
-        <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-2 rounded-full bg-black/60 px-2 py-1">
-  {/* Titre → Discover filtré par entité */}
-        <button
-          onClick={() => navigate(`/discover?entity=${encodeURIComponent(title)}`)}
-          className="text-sm font-semibold hover:underline"
-        >
-          {title}
-        </button>
+        <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-2 rounded-full bg-white/80 dark:bg-black/60 px-2 py-1 backdrop-blur-sm">
+          {/* Titre → Reports List (recherche texte) */}
+          <button
+            type="button"
+            onClick={goSearchReports}
+            className="inline-flex items-center rounded border px-3 py-1 text-sm
+                       border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900"
+            title="Rechercher des rapports similaires"
+            aria-label="Rechercher des rapports similaires"
+          >
+            {title}
+          </button>
 
-        {/* Catégorie → Discover filtré par catégorie */}
-        <button
-          onClick={() => navigate(`/discover?category=${encodeURIComponent(category)}`)}
-          className="text-[10px] uppercase tracking-wide rounded-full bg-neutral-900/70 px-2 py-0.5 border border-neutral-800 hover:underline"
-        >
-          {category}
-        </button>
+          {/* Catégorie → même logique que le titre : Reports List avec q=catégorie */}
+          <button
+            type="button"
+            onClick={goSearchByCategory}
+            className="text-[10px] uppercase tracking-wide rounded-full bg-neutral-100/70 dark:bg-neutral-900/70 px-2 py-0.5 border border-neutral-300 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:underline"
+            title="Rechercher par catégorie"
+            aria-label="Rechercher par catégorie"
+          >
+            {category}
+          </button>
 
-        {/* Statut (non cliquable) */}
-        <span className={`text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5 border ${statusBadgeClass(statusTxt)}`}>
-          {statusLabel(statusTxt)}
-        </span>
-      </div>
-
+          {/* Statut (non cliquable) */}
+          <span className={`text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5 border ${statusBadgeClass(statusTxt)}`}>
+            {statusLabel(statusTxt)}
+          </span>
+        </div>
 
         {/* Wrapper dont la hauteur s'ajuste à l'image courante */}
         <div
           ref={wrapRef}
-          className="relative w-full bg-black transition-[height] duration-200 ease-out"
+          className="relative w-full bg-neutral-100 dark:bg-black transition-[height] duration-200 ease-out"
           style={{ height: hPx ? `${hPx}px` : undefined }}
         >
           {attachments.length > 0 ? (
             <>
-              <button onClick={()=>scroll(-1)} className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-1 hover:bg-black/70">‹</button>
-              <button onClick={()=>scroll(1)}  className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-1 hover:bg-black/70">›</button>
+              <button onClick={()=>scroll(-1)} className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/80 dark:bg-black/50 p-1 hover:bg-white dark:hover:bg-black/70 backdrop-blur-sm">
+                ‹
+              </button>
+              <button onClick={()=>scroll(1)}  className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/80 dark:bg-black/50 p-1 hover:bg-white dark:hover:bg-black/70 backdrop-blur-sm">
+                ›
+              </button>
 
               {/* Rail horizontal : hauteur = celle du wrapper (pas d'espace vide) */}
               <div
@@ -261,12 +294,12 @@ export default function ReportDetail() {
                         <img
                           src={src}
                           alt=""
-                          className="block w-full h-full object-contain bg-black"
+                          className="block w-full h-full object-contain bg-white dark:bg-black"
                           loading="lazy"
                           decoding="async"
                         />
                       ) : (
-                        <div className="grid w-full h-full place-items-center text-neutral-500 bg-neutral-900">Média</div>
+                        <div className="grid w-full h-full place-items-center text-neutral-500 bg-neutral-200 dark:bg-neutral-900">Média</div>
                       )}
                     </div>
                   );
@@ -274,13 +307,13 @@ export default function ReportDetail() {
               </div>
             </>
           ) : (
-            <div className="grid w-full aspect-video place-items-center bg-neutral-900 text-neutral-500">
+            <div className="grid w-full aspect-video place-items-center bg-neutral-200 dark:bg-neutral-900 text-neutral-500">
               Aucun média
             </div>
           )}
 
           {/* Horodatage */}
-          <div className="absolute bottom-0 right-0 m-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-neutral-200">
+          <div className="absolute bottom-0 right-0 m-2 rounded-full bg-white/80 dark:bg-black/60 px-2 py-0.5 text-[10px] text-neutral-700 dark:text-neutral-200 backdrop-blur-sm">
             {timeAgo(at)}
           </div>
         </div>
@@ -288,36 +321,36 @@ export default function ReportDetail() {
 
       {/* Description */}
       {description && (
-        <div className="rounded-2xl border border-neutral-800 p-4 bg-neutral-950/60 text-neutral-100">
+        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-4 bg-white/80 dark:bg-neutral-950/60 text-neutral-900 dark:text-neutral-100 backdrop-blur-sm">
           {description}
         </div>
       )}
 
-      {/* Barre d’actions */}
-      <div className="flex items-center gap-5 px-1 text-sm">
-        <span className="mx-1 h-4 w-px bg-neutral-800" />
+      {/* Barre d'actions */}
+      <div className="flex items-center gap-5 px-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
         <Tip label={myVote==='u' ? "Cliquer pour annuler" : "Vote utile"}>
-          <button onClick={()=>doVote(true)} disabled={!reportId} className={`flex items-center gap-1 hover:text-white ${myVote==='u' ? 'text-violet-400' : ''}`}>
+          <button onClick={()=>doVote(true)} disabled={!reportId} className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote==='u' ? 'text-violet-600 dark:text-violet-400' : ''}`}>
             <IconThumbUp width="18" height="18" active={myVote==='u'} />
             <span>{useful}</span>
           </button>
         </Tip>
         <Tip label={myVote==='n' ? "Cliquer pour annuler" : "Vote pas utile"}>
-          <button onClick={()=>doVote(false)} disabled={!reportId} className={`flex items-center gap-1 hover:text-white ${myVote==='n' ? 'text-violet-400' : ''}`}>
+          <button onClick={()=>doVote(false)} disabled={!reportId} className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote==='n' ? 'text-violet-600 dark:text-violet-400' : ''}`}>
             <IconThumbDown width="18" height="18" active={myVote==='n'} />
             <span>{notUseful}</span>
           </button>
         </Tip>
-        <span className="mx-1 h-4 w-px bg-neutral-800" />
-        <Tip label={`${commentsCnt} commentaires`}>
-          <button onClick={() => setOpenComments(true)} className="flex items-center gap-1 hover:text-white" disabled={!reportId}>
+        <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
+        <Tip label={`${r?.commentsCount ?? 0} commentaires`}>
+          <button onClick={() => setOpenComments(true)} className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white" disabled={!reportId}>
             <IconComment width="18" height="18" />
-            <span>{commentsCnt}</span>
+            <span>{r?.commentsCount ?? 0}</span>
           </button>
         </Tip>
-        <span className="ml-auto text-xs text-neutral-500" />
+        <span className="ml-auto text-xs text-neutral-500 dark:text-neutral-500" />
         <Tip label="Ajouter un signalement">
-          <button type="button" onClick={goAddToThisCase} className="flex items-center gap-1 hover:text-white">
+          <button type="button" onClick={goAddToThisCase} className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white">
             <IconPlus width="18" height="18" />
           </button>
         </Tip>

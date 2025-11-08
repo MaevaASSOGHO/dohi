@@ -39,7 +39,7 @@ function TextField({
 
   return (
     <div>
-      {label && <label className="block text-xs text-neutral-400 mb-1">{label}</label>}
+      {label && <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">{label}</label>}
       <Base
         type={as === "textarea" ? undefined : type}
         rows={as === "textarea" ? rows : undefined}
@@ -50,12 +50,16 @@ function TextField({
         maxLength={maxLength}
         disabled={disabled}
         className={[
-          "w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm",
+          "w-full rounded border px-3 py-2 text-sm",
+          "border-neutral-300 dark:border-neutral-700",
+          "bg-white text-neutral-900 placeholder:text-neutral-400",
+          "dark:bg-neutral-900 dark:text-neutral-100",
+          "focus:outline-none focus:ring-2 focus:ring-violet-500/40",
           className,
         ].join(" ")}
       />
       {typeof maxLength === "number" && (
-        <div className="mt-1 text-[10px] text-neutral-500">
+        <div className="mt-1 text-[10px] text-neutral-500 dark:text-neutral-400">
           {(local || "").trim().length}/{maxLength}
         </div>
       )}
@@ -320,14 +324,16 @@ export default function ReportNew() {
           className={`h-6 w-6 shrink-0 rounded-full text-xs grid place-items-center border ${
             step === n
               ? "bg-white text-black"
-              : "bg-neutral-900 text-neutral-300 border-neutral-700"
+              : "bg-neutral-100 text-neutral-700 border-neutral-300 dark:bg-neutral-900 dark:text-neutral-300 dark:border-neutral-700"
           }`}
         >
           {n}
         </div>
-        <h2 className="text-lg font-medium">{title}</h2>
+        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">{title}</h2>
       </div>
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-4">
+      <div className="rounded-2xl border p-4
+                      border-neutral-300 bg-white
+                      dark:border-neutral-800 dark:bg-neutral-950/60">
         {children}
       </div>
     </section>
@@ -338,7 +344,11 @@ export default function ReportNew() {
       <button
         type="button"
         onClick={() => setStep((s) => Math.max(0, s - 1))}
-        className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900"
+        className="rounded border px-3 py-1 text-sm
+                   border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                   dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
+                   disabled:opacity-60
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
         disabled={step === 0}
       >
         Retour
@@ -346,7 +356,7 @@ export default function ReportNew() {
       <button
         type="button"
         onClick={onNext}
-        className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
+        className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
         disabled={!canNext}
       >
         Suivant
@@ -355,14 +365,16 @@ export default function ReportNew() {
   );
 
   // ——— Render
-  if (meLoading) return <div className="p-4 text-sm text-neutral-400">Chargement…</div>;
+  if (meLoading) return <div className="p-4 text-sm text-neutral-600 dark:text-neutral-400">Chargement…</div>;
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-3">
-      <h3 className="text-2xl font-semibold">Nouveau signalement</h3>
+      <h3 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Nouveau signalement</h3>
 
       {meError && (
-        <div className="rounded border border-yellow-800 bg-yellow-900/30 p-3 text-sm text-yellow-100">
+        <div className="rounded border p-3 text-sm
+                        border-yellow-300 bg-yellow-50 text-yellow-800
+                        dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
           Impossible de récupérer votre profil (/me)
           {meErr?.response?.status ? ` (${meErr.response.status})` : ""}.
         </div>
@@ -373,7 +385,7 @@ export default function ReportNew() {
         <Step n={0} title="Compte vérifié (optionnel pour publier)">
           {isVerified ? (
             <div className="space-y-3 text-sm">
-              <p className="text-neutral-300">
+              <p className="text-neutral-700 dark:text-neutral-300">
                 Votre compte est <strong>vérifié</strong>. Vous pouvez continuer et publier.
               </p>
               <div className="mt-4">
@@ -382,7 +394,9 @@ export default function ReportNew() {
             </div>
           ) : (
             <div className="space-y-3 text-sm">
-              <div className="rounded border border-yellow-800 bg-yellow-900/20 p-3 text-yellow-100">
+              <div className="rounded border p-3
+                              border-yellow-300 bg-yellow-50 text-yellow-800
+                              dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100">
                 <div className="font-medium mb-1">Publication possible sans vérification</div>
                 <p>
                   Votre signalement sera <strong>mis en examen</strong> par la modération. Pour{" "}
@@ -395,7 +409,7 @@ export default function ReportNew() {
                 <button
                   type="button"
                   onClick={() => navigate("/kyc", { state: { from: "/reports/new" } })}
-                  className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90"
+                  className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
                 >
                   Vérifier mon compte
                 </button>
@@ -403,13 +417,16 @@ export default function ReportNew() {
                 <button
                   type="button"
                   onClick={() => { setSkippedKyc(true); setStep(1); }}
-                  className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900"
+                  className="rounded border px-3 py-1 text-sm
+                             border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                             dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
+                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
                 >
                   Continuer sans vérifier
                 </button>
               </div>
 
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
                 Vous pourrez revenir faire la vérification depuis le menu (portrait/paramètres) à tout moment.
               </p>
             </div>
@@ -426,8 +443,10 @@ export default function ReportNew() {
                 key={s.key}
                 type="button"
                 onClick={() => setScenario(s.key)}
-                className={`rounded-xl border px-3 py-3 text-sm hover:bg-neutral-900 ${
-                  scenario === s.key ? "border-white" : "border-neutral-700"
+                className={`rounded-xl border px-3 py-3 text-sm transition-colors ${
+                  scenario === s.key
+                    ? "border-violet-400 bg-violet-50 text-violet-700 dark:border-white dark:bg-transparent dark:text-neutral-100"
+                    : "border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-900 dark:text-neutral-200"
                 }`}
               >
                 {s.label}
@@ -441,7 +460,7 @@ export default function ReportNew() {
       {/* Step 2 — Pré-check doublons */}
       {step === 2 && (
         <Step n={2} title="Rechercher des dossiers existants">
-          <p className="text-sm text-neutral-300 mb-2">
+          <p className="text-sm mb-2 text-neutral-700 dark:text-neutral-300">
             Avant de créer un nouveau dossier, vérifiez s’il n’existe pas déjà (y compris variantes
             d’orthographe).
           </p>
@@ -451,10 +470,10 @@ export default function ReportNew() {
             placeholder="Nom, numéro, plaque, site, @compte…"
           />
           {preQ.trim().length < minLen && (
-            <div className="p-3 text-xs text-neutral-500">Tape au moins {minLen} caractère…</div>
+            <div className="p-3 text-xs text-neutral-600 dark:text-neutral-500">Tape au moins {minLen} caractère…</div>
           )}
           {preLoading && preQ.trim().length >= minLen && (
-            <div className="p-3 text-sm text-neutral-400">Recherche…</div>
+            <div className="p-3 text-sm text-neutral-600 dark:text-neutral-400">Recherche…</div>
           )}
           {!preLoading && preQ.trim().length >= minLen && (
             precheck?.items?.length ? precheck.items.map((it) => {
@@ -462,18 +481,18 @@ export default function ReportNew() {
                 ? `/reports/${it.reportId}`
                 : `/discover?q=${encodeURIComponent(it.entityName || it.title || preQ)}`;
               return (
-                <Link key={it.id} to={href} className="block p-3 hover:bg-neutral-900/60">
+                <Link key={it.id} to={href} className="block p-3 hover:bg-neutral-50 dark:hover:bg-neutral-900/60 rounded-md">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium">{it.title || it.entityName || "Dossier"}</span>
-                    <span className="text-xs text-neutral-400">
+                    <span className="font-medium text-neutral-900 dark:text-neutral-100">{it.title || it.entityName || "Dossier"}</span>
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
                       {it.createdAt ? new Date(it.createdAt).toLocaleDateString() : ""}
                     </span>
                   </div>
-                  <div className="text-xs text-neutral-400">{it.type}</div>
+                  <div className="text-xs text-neutral-600 dark:text-neutral-400">{it.type}</div>
                 </Link>
               );
             }) : (
-              <div className="p-3 text-sm text-neutral-500">Aucun dossier trouvé.</div>
+              <div className="p-3 text-sm text-neutral-600 dark:text-neutral-500">Aucun dossier trouvé.</div>
             )
           )}
           <NextPrev canNext={true} onNext={() => setStep(3)} />
@@ -494,11 +513,14 @@ export default function ReportNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-neutral-400 mb-1">Type d’arnaque</label>
+                <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">Type d’arnaque</label>
                 <select
                   value={scamType}
                   onChange={(e) => setScamType(e.target.value)}
-                  className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+                  className="w-full rounded border px-3 py-2 text-sm
+                             border-neutral-300 dark:border-neutral-700
+                             bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100
+                             focus:outline-none focus:ring-2 focus:ring-violet-500/40"
                 >
                   {SCAM_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -517,7 +539,7 @@ export default function ReportNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-neutral-400 mb-1">Date</label>
+                <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">Date</label>
                 <TextField
                   value={date}
                   onCommit={(v) => setDate(v)}
@@ -574,7 +596,7 @@ export default function ReportNew() {
               />
             </div>
           </div>
-          <NextPrev canNext={canNextFromStep3} onNext={() => setStep(4)} />
+          <NextPrev canNext={title.trim().length > 5 && title.trim().length <= MAX_TITLE} onNext={() => setStep(4)} />
         </Step>
       )}
 
@@ -593,11 +615,14 @@ export default function ReportNew() {
               />
               <label
                 htmlFor="evidence"
-                className="cursor-pointer rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm hover:bg-neutral-800"
+                className="cursor-pointer rounded border px-3 py-2 text-sm
+                           border-neutral-300 bg-white hover:bg-neutral-50
+                           dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
               >
                 + Ajouter des médias
               </label>
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-neutral-600 dark:text-neutral-500">
                 {files.length}/{MAX_FILES}
               </span>
             </div>
@@ -607,21 +632,23 @@ export default function ReportNew() {
                 {files.map((f) => (
                   <li
                     key={f.localUrl}
-                    className="relative rounded-md overflow-hidden border border-neutral-800"
+                    className="relative rounded-md overflow-hidden border
+                               border-neutral-300 bg-neutral-100
+                               dark:border-neutral-800 dark:bg-neutral-900"
                   >
                     {f.mime?.startsWith("image/") ? (
                       <img src={f.localUrl} alt={f.name} className="h-28 w-full object-cover" />
                     ) : f.mime?.startsWith("video/") ? (
                       <video src={f.localUrl} className="h-28 w-full object-cover" />
                     ) : (
-                      <div className="h-28 grid place-items-center text-xs text-neutral-400 p-2 break-words">
+                      <div className="h-28 grid place-items-center text-xs p-2 break-words text-neutral-600 dark:text-neutral-400">
                         {f.name || f.mime}
                       </div>
                     )}
                     <button
                       type="button"
                       onClick={() => removeFile(f.localUrl)}
-                      className="absolute right-1 top-1 rounded bg-black/60 px-1 text-xs"
+                      className="absolute right-1 top-1 rounded bg-black/60 px-1 text-xs text-white"
                     >
                       ✕
                     </button>
@@ -630,7 +657,7 @@ export default function ReportNew() {
               </ul>
             )}
           </div>
-          <NextPrev canNext={canNextFromStep4} onNext={() => setStep(5)} />
+          <NextPrev canNext={files.length <= MAX_FILES} onNext={() => setStep(5)} />
         </Step>
       )}
 
@@ -638,7 +665,7 @@ export default function ReportNew() {
       {step === 5 && (
         <Step n={5} title="Récit structuré">
           <div className="space-y-3">
-            <div className="text-sm text-neutral-300">
+            <div className="text-sm text-neutral-700 dark:text-neutral-300">
               Réponds brièvement : <em>Que s’est-il passé ?</em>{" "}
               <em>Quel préjudice (montant / perte) ?</em>{" "}
               <em>As-tu contacté la police ?</em>
@@ -650,11 +677,11 @@ export default function ReportNew() {
               onCommit={(v) => setStory(v)}
               placeholder={`Min. ${MIN_STORY} caractères. Donne des faits utiles (dates, montants, échanges, etc.).`}
             />
-            <div className="text-[10px] text-neutral-500">
+            <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
               {story.trim().length} caractères
             </div>
           </div>
-          <NextPrev canNext={canNextFromStep5} onNext={() => setStep(6)} />
+          <NextPrev canNext={story.trim().length >= MIN_STORY} onNext={() => setStep(6)} />
         </Step>
       )}
 
@@ -662,12 +689,14 @@ export default function ReportNew() {
       {step === 6 && (
         <Step n={6} title="Aperçu & engagement">
           <div className="space-y-3 text-sm">
-            <div className="rounded border border-neutral-800 p-3">
-              <div className="font-medium">{title}</div>
-              <div className="text-xs text-neutral-400">
+            <div className="rounded border p-3
+                            border-neutral-300 bg-white
+                            dark:border-neutral-800 dark:bg-neutral-900/60">
+              <div className="font-medium text-neutral-900 dark:text-neutral-100">{title}</div>
+              <div className="text-xs text-neutral-600 dark:text-neutral-400">
                 {scamType} • {city || "Lieu inconnu"} • {date || "Date inconnue"}
               </div>
-              <div className="mt-2 whitespace-pre-wrap">{story}</div>
+              <div className="mt-2 whitespace-pre-wrap text-neutral-800 dark:text-neutral-100">{story}</div>
               {files.length > 0 && (
                 <div className="mt-2 grid grid-cols-3 gap-1">
                   {files.map((f) => (
@@ -677,31 +706,33 @@ export default function ReportNew() {
               )}
             </div>
 
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-neutral-800 dark:text-neutral-100">
               <input
                 type="checkbox"
-                className="accent-white"
+                className="accent-violet-600 dark:accent-white"
                 checked={agreedRules}
                 onChange={(e) => setAgreedRules(e.target.checked)}
               />
               J’accepte les règles : faux signalement = bannissement.
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-neutral-800 dark:text-neutral-100">
               <input
                 type="checkbox"
-                className="accent-white"
+                className="accent-violet-600 dark:accent-white"
                 checked={confirmTruth}
                 onChange={(e) => setConfirmTruth(e.target.checked)}
               />
               Je certifie l’exactitude de mon témoignage.
             </label>
             {skippedKyc && (
-              <div className="rounded border border-yellow-800 bg-yellow-900/20 p-2 text-xs text-yellow-100">
+              <div className="rounded border p-2 text-xs
+                              border-yellow-300 bg-yellow-50 text-yellow-800
+                              dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100">
                 Astuce : la vérification d’identité peut accélérer la validation de votre signalement.
               </div>
             )}
             {publishMutation.isError && (
-              <div className="text-xs text-red-300">
+              <div className="text-xs text-red-700 dark:text-red-300">
                 Échec de la publication. Vérifie la console / logs serveur.
               </div>
             )}
@@ -710,7 +741,10 @@ export default function ReportNew() {
               <button
                 type="button"
                 onClick={() => setStep(5)}
-                className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900"
+                className="rounded border px-3 py-1 text-sm
+                           border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                           dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
               >
                 Retour
               </button>
@@ -719,7 +753,7 @@ export default function ReportNew() {
                 type="button"
                 onClick={() => publishMutation.mutate()}
                 disabled={!canPublish || publishMutation.isPending}
-                className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
+                className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
               >
                 {publishMutation.isPending ? "Publication…" : "Publier"}
               </button>

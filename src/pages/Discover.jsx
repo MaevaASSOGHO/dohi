@@ -117,7 +117,7 @@ export default function Discover() {
 
   /** === 3) IntersectionObserver pour le scroll infini (selon le mode) === */
   const sentinelRef = useRef(null);
-    useEffect(() => {
+  useEffect(() => {
     if (USE_MANUAL_LOAD) return; // ← on laisse le bouton gérer
     const el = sentinelRef.current;
     if (!el) return;
@@ -136,7 +136,6 @@ export default function Discover() {
     return () => io.disconnect();
   }, [q, gridHasNext, listHasNext, gridFetchNext, listFetchNext]);
 
-
   /** Utilitaire image: cover -> thumb -> evidences[0] */
   const pickImage = (r) =>
     r?.thumb?.url || r?.cover?.url ||
@@ -153,28 +152,61 @@ export default function Discover() {
           value={q}
           onChange={(e)=> setParam("q", e.target.value)}   // recherche en direct
           placeholder={entity ? `Recherche dans "${entity}"` : "Rechercher…"}
-          className="min-w-0 flex-1 rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
+          className="min-w-0 flex-1 rounded border border-neutral-300 dark:border-neutral-700
+                     bg-white dark:bg-neutral-900
+                     text-neutral-900 dark:text-neutral-100
+                     placeholder:text-neutral-400
+                     px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-violet-500/40"
         />
         <div className="flex items-center gap-1 text-xs">
-          <button type="button" onClick={()=>setParam("status","")}
-            className={`rounded px-2 py-1 border ${status==="" ? "bg-white text-black" : "border-neutral-700 hover:bg-neutral-900"}`}>
+          <button
+            type="button"
+            onClick={()=>setParam("status","")}
+            className={`rounded px-2 py-1 border ${
+              status===""
+                ? "bg-white text-black"
+                : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40`}
+          >
             Tous
           </button>
-          <button type="button" onClick={()=>setParam("status","verified")}
-            className={`rounded px-2 py-1 border ${status==="verified" ? "bg-white text-black" : "border-neutral-700 hover:bg-neutral-900"}`}>
+
+          <button
+            type="button"
+            onClick={()=>setParam("status","verified")}
+            className={`rounded px-2 py-1 border ${
+              status==="verified"
+                ? "bg-white text-black"
+                : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40`}
+          >
             Vérifiés
           </button>
-          <button type="button" onClick={()=>setParam("status","in_review")}
-            className={`rounded px-2 py-1 border ${status==="in_review" ? "bg-white text-black" : "border-neutral-700 hover:bg-neutral-900"}`}>
+
+          <button
+            type="button"
+            onClick={()=>setParam("status","in_review")}
+            className={`rounded px-2 py-1 border ${
+              status==="in_review"
+                ? "bg-white text-black"
+                : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+            } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40`}
+          >
             En revue
           </button>
         </div>
 
-
         {entity && (
-          <div className="ml-auto text-xs text-neutral-400">
-            Entité : <span className="font-medium text-neutral-200">{entity}</span>
-            <button type="button" onClick={() => setParam("entity","")} className="ml-2 underline">effacer</button>
+          <div className="ml-auto text-xs text-neutral-600 dark:text-neutral-400">
+            Entité : <span className="font-medium text-neutral-900 dark:text-neutral-200">{entity}</span>
+            <button
+              type="button"
+              onClick={() => setParam("entity","")}
+              className="ml-2 underline underline-offset-2 hover:opacity-80"
+            >
+              effacer
+            </button>
           </div>
         )}
       </form>
@@ -183,19 +215,27 @@ export default function Discover() {
       {q.trim() !== "" ? (
         <section className="space-y-3">
           {listError && (
-            <div className="rounded border border-yellow-800 bg-yellow-900/30 p-3 text-sm text-yellow-200">
+            <div className="rounded border p-3 text-sm
+                            border-yellow-300 bg-yellow-50 text-yellow-800
+                            dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
               Erreur{listError?.response?.status?` (${listError.response.status})`:""}.
-              <button onClick={()=>listRefetch()} className="ml-2 underline">Réessayer</button>
+              <button onClick={()=>listRefetch()} className="ml-2 underline underline-offset-2 hover:opacity-80">Réessayer</button>
             </div>
           )}
 
           <div className="max-h-[70vh] overflow-auto space-y-2">
             {listLoading && !listItems.length && (
-              <div className="rounded-xl border border-neutral-800 p-3 text-sm text-neutral-400">Chargement…</div>
+              <div className="rounded-xl border p-3 text-sm
+                              border-neutral-300 text-neutral-600
+                              dark:border-neutral-800 dark:text-neutral-400">
+                Chargement…
+              </div>
             )}
 
             {!listLoading && listItems.length === 0 && (
-              <div className="rounded-xl border border-neutral-800 p-3 text-sm text-neutral-400">
+              <div className="rounded-xl border p-3 text-sm
+                              border-neutral-300 text-neutral-600
+                              dark:border-neutral-800 dark:text-neutral-400">
                 Aucun signalement pour « {q} ».
               </div>
             )}
@@ -204,16 +244,20 @@ export default function Discover() {
 
             <div ref={sentinelRef} />
             {(USE_MANUAL_LOAD || listHasNext) && (
-            <div className="py-2 text-center">
-              <button
-                disabled={!listHasNext || listFetchingNext}
-                onClick={()=>listFetchNext()}
-                className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900 disabled:opacity-60"
-              >
-                {listFetchingNext ? "Chargement…" : (listHasNext ? "Voir plus" : "Fin de liste")}
-              </button>
-            </div>
-          )}
+              <div className="py-2 text-center">
+                <button
+                  disabled={!listHasNext || listFetchingNext}
+                  onClick={()=>listFetchNext()}
+                  className="rounded border px-3 py-1 text-sm
+                             border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                             disabled:opacity-60
+                             dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
+                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
+                >
+                  {listFetchingNext ? "Chargement…" : (listHasNext ? "Voir plus" : "Fin de liste")}
+                </button>
+              </div>
+            )}
 
             {listTotal > 0 && (
               <div className="py-2 text-center text-xs text-neutral-500">
@@ -226,17 +270,21 @@ export default function Discover() {
       /* —— MODE GRILLE quand pas de recherche —— */
       <>
         {enableAgg && aggError && (
-          <div className="rounded border border-yellow-800 bg-yellow-900/30 p-3 text-sm text-yellow-200">
+          <div className="rounded border p-3 text-sm
+                          border-yellow-300 bg-yellow-50 text-yellow-800
+                          dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
             L’exploration (tendances/mots-clés) n’est pas encore dispo côté serveur.
           </div>
         )}
 
         {/* Grille d’images (Instagram-like) */}
         <section className="space-y-3">
-          <h2 className="text-lg font-medium">Signalements publics récents</h2>
+          <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">Signalements publics récents</h2>
 
           {gridError && (
-            <div className="rounded border border-yellow-800 bg-yellow-900/30 p-3 text-sm text-yellow-200">
+            <div className="rounded border p-3 text-sm
+                            border-yellow-300 bg-yellow-50 text-yellow-800
+                            dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
               Les signalements ne sont pas encore disponibles. Réessaie plus tard.
             </div>
           )}
@@ -244,7 +292,7 @@ export default function Discover() {
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5 sm:gap-2">
             {gridLoading && !gridItems.length
               ? Array.from({ length: 12 }).map((_, i) => (
-                  <div key={`skeleton-tile-${i}`} className={`${aspectClass} bg-neutral-800`} />
+                  <div key={`skeleton-tile-${i}`} className={`${aspectClass} bg-neutral-200 dark:bg-neutral-800`} />
                 ))
               : gridItems.map((r) => {
                   const img = pickImage(r);
@@ -252,7 +300,7 @@ export default function Discover() {
                     <Link
                       key={`report-${r.id}`}
                       to={`/reports/${r.id}`}
-                      className={`relative block ${aspectClass} overflow-hidden bg-neutral-900`}
+                      className={`relative block ${aspectClass} overflow-hidden bg-neutral-100 dark:bg-neutral-900`}
                       title={r.type || r.entityName || r.entity || "Report"}
                     >
                       {img ? (
@@ -278,13 +326,16 @@ export default function Discover() {
               <button
                 disabled={!gridHasNext || gridFetchingNext}
                 onClick={()=>gridFetchNext()}
-                className="rounded border border-neutral-700 px-3 py-1 text-sm hover:bg-neutral-900 disabled:opacity-60"
+                className="rounded border px-3 py-1 text-sm
+                           border-neutral-300 text-neutral-700 hover:bg-neutral-50
+                           disabled:opacity-60
+                           dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
               >
                 {gridFetchingNext ? "Chargement…" : (gridHasNext ? "Voir plus" : "Fin de résultats")}
               </button>
             </div>
           )}
-
         </section>
       </>
       )}

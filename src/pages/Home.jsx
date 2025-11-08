@@ -49,40 +49,45 @@ export default function Home() {
           {/* HERO SECTION */}
           <section className="px-6 py-12 sm:px-10 sm:py-16 lg:px-16">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              
               {/* Texte Principal */}
               <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 text-xs font-medium tracking-wide text-violet-200 bg-violet-900/25 px-3 py-1 rounded-full mb-6">
+                <div className="inline-flex items-center gap-2 text-xs font-medium tracking-wide 
+                              text-violet-800 dark:text-violet-200
+                                bg-violet-100/80 dark:bg-violet-900/25
+                                px-3 py-1 rounded-full mb-6">
                   <span className="h-2 w-2 rounded-full bg-amber-400" />
-                  <span>OS Scammer — communauté anti-arnaques</span>
+                  <span>DOHI — communauté anti-arnaques</span>
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white mb-6">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight 
+                @             text-neutral-900 dark:text-white mb-6">
                   Dénonce, <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-amber-300">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r 
+                                    from-violet-700 to-amber-600 
+                                    dark:from-violet-300 to-amber-300">
                     vérifie,
                   </span> <br />
                   protège-toi.
                 </h1>
 
-                <p className="text-lg text-neutral-300 max-w-xl mb-8 leading-relaxed">
+                <p className="text-lg text-neutral-900 dark:text-neutral-300 max-w-xl mb-8 leading-relaxed">
                   Dépose un signalement en 2 minutes, vérifie une identité avant d'acheter,
                   et reçois des alertes lorsque des profils suspects sont détectés.
                 </p>
 
                 {/* Actions Principales */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                     <IconReport className="h-8 w-8 text-violet-300 mb-3" />
                     <div className="text-base font-semibold text-white mb-2">Signaler un cas</div>
                     <p className="text-sm text-neutral-300 leading-relaxed">Ajoute des preuves pour protéger la communauté.</p>
                   </div>
-                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                     <IconSearch className="h-8 w-8 text-amber-300 mb-3" />
                     <div className="text-base font-semibold text-white mb-2">Vérifier un profil</div>
                     <p className="text-sm text-neutral-300 leading-relaxed">Recherche par nom, téléphone, IBAN, pseudo…</p>
                   </div>
-                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                     <IconBell className="h-8 w-8 text-amber-400 mb-3" />
                     <div className="text-base font-semibold text-white mb-2">Recevoir des alertes</div>
                     <p className="text-sm text-neutral-300 leading-relaxed">Suis l'évolution d'un cas et les récidives.</p>
@@ -93,7 +98,7 @@ export default function Home() {
               {/* Illustration */}
               <div className="relative">
                 <div className="absolute -inset-10 -top-10 h-40 opacity-30 blur-2xl" style={{ background: "radial-gradient(ellipse at center, #7c3aed40, transparent 60%)" }} />
-                <div className="rounded-2xl bg-neutral-900/50 p-3 border border-neutral-800">
+                <div className="rounded-2xl bg-neutral-900/50 p-3 border border-neutral-200 dark:border-neutral-800">
                   <div className="rounded-xl bg-gradient-to-br from-violet-500/10 to-amber-500/10 p-8 flex items-center justify-center min-h-[300px]">
                     <img
                       src="./assets/hero.png"
@@ -105,15 +110,15 @@ export default function Home() {
                 
                 {/* Badges d'info */}
                 <div className="mt-6 grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-800">
+                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-200 dark:border-neutral-800">
                     <IconGlobe className="h-5 w-5 text-violet-300" />
                     <span className="text-sm font-medium text-neutral-200">28 pays</span>
                   </div>
-                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-800">
+                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-200 dark:border-neutral-800">
                     <IconShield className="h-5 w-5 text-amber-300" />
                     <span className="text-sm font-medium text-neutral-200">Sécurité</span>
                   </div>
-                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-800">
+                  <div className="rounded-xl bg-neutral-900/60 p-4 flex items-center gap-3 border border-neutral-200 dark:border-neutral-800">
                     <IconId className="h-5 w-5 text-violet-300" />
                     <span className="text-sm font-medium text-neutral-200">KYC</span>
                   </div>
@@ -126,14 +131,14 @@ export default function Home() {
           <section className="px-6 pb-12 sm:px-10 lg:px-16">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold text-white mb-3">Comment ça marche</h2>
-              <p className="text-lg text-neutral-300 max-w-2xl mx-auto">
+              <p className="text-lg text-neutral-900 dark:text-neutral-300 max-w-2xl mx-auto">
                 Un processus simple et efficace pour lutter contre les arnaques
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
               {/* Étape 1 */}
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">1</span>
                   <span className="text-lg font-semibold text-white">Créer un signalement</span>
@@ -149,7 +154,7 @@ export default function Home() {
               </div>
 
               {/* Étape 2 */}
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">2</span>
                   <span className="text-lg font-semibold text-white">Vérifier une identité</span>
@@ -165,7 +170,7 @@ export default function Home() {
               </div>
 
               {/* Étape 3 */}
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">3</span>
                   <span className="text-lg font-semibold text-white">Croiser les preuves</span>
@@ -181,7 +186,7 @@ export default function Home() {
               </div>
 
               {/* Étape 4 */}
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-black text-sm font-bold">4</span>
                   <span className="text-lg font-semibold text-white">Être alerté</span>
@@ -199,21 +204,21 @@ export default function Home() {
 
             {/* Section Confiance & Sécurité */}
             <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 flex items-start gap-4">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 flex items-start gap-4">
                 <IconShield className="h-8 w-8 text-violet-300 shrink-0 mt-1" />
                 <div>
                   <div className="text-lg font-semibold text-white mb-2">Protection des données</div>
                   <p className="text-neutral-300 leading-relaxed">Données sensibles chiffrées de bout en bout, stockage sécurisé et conformité RGPD.</p>
                 </div>
               </div>
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 flex items-start gap-4">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 flex items-start gap-4">
                 <IconId className="h-8 w-8 text-amber-300 shrink-0 mt-1" />
                 <div>
                   <div className="text-lg font-semibold text-white mb-2">Vérifications multiples</div>
                   <p className="text-neutral-300 leading-relaxed">KYC avancé, validations communautaires et vérifications croisées.</p>
                 </div>
               </div>
-              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-800 flex items-start gap-4">
+              <div className="rounded-2xl bg-neutral-900/50 p-6 border border-neutral-200 dark:border-neutral-800 flex items-start gap-4">
                 <IconBell className="h-8 w-8 text-amber-400 shrink-0 mt-1" />
                 <div>
                   <div className="text-lg font-semibold text-white mb-2">Alertes intelligentes</div>

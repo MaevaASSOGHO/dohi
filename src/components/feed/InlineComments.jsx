@@ -36,32 +36,43 @@ export default function InlineComments({ reportId, onClose }) {
   const canSubmit = message.trim().length >= 5 && message.trim().length <= 2000;
 
   return (
-    <div className="mt-2 rounded-xl border border-neutral-800 bg-neutral-950/60">
+    <div className="mt-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-950/60">
       {/* formulaire compact */}
       <form
         onSubmit={(e)=>{e.preventDefault(); if (canSubmit) mutation.mutate({kind, message});}}
         className="flex flex-col gap-2 p-3"
       >
         <div className="flex gap-2">
-          <select value={kind} onChange={(e)=>setKind(e.target.value)}
-                  className="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs">
-            {Object.entries(KIND_LABELS).map(([k,label])=>(
+          <select 
+            value={kind} 
+            onChange={(e) => setKind(e.target.value)}
+            className="rounded border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/60 px-2 py-1 text-xs text-neutral-900 dark:text-neutral-100"
+          >
+            {Object.entries(KIND_LABELS).map(([k, label]) => (
               <option key={k} value={k}>{label}</option>
             ))}
           </select>
+          
           <textarea
             rows={2}
             value={message}
-            onChange={(e)=>setMessage(e.target.value)}
+            onChange={(e) => setMessage(e.target.value)}
             placeholder={`Min. 5 caractères...`}
-            className="flex-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm"
+            className="flex-1 rounded border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/60 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100"
           />
-          <button disabled={!canSubmit || mutation.isPending}
-                  className="rounded bg-white px-3 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60">
+          
+          <button 
+            disabled={!canSubmit || mutation.isPending}
+            className="rounded bg-neutral-900 dark:bg-white px-3 text-sm font-medium text-white dark:text-black hover:opacity-90 disabled:opacity-60"
+          >
             Envoyer
           </button>
-          <button type="button" onClick={onClose}
-                  className="rounded border border-neutral-700 px-2 text-sm hover:bg-neutral-900">
+          
+          <button 
+            type="button" 
+            onClick={onClose}
+            className="rounded border border-neutral-200 dark:border-neutral-800 px-2 text-sm text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+          >
             Fermer
           </button>
         </div>

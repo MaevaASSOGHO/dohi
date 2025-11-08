@@ -28,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "reports/new", element: <ReportNew /> },
       { path:"/kyc", element: <KycWizardOnly /> },   
       { path: "reports/:id", element: <ReportDetail /> },
+      { path: "reports", element: <ReportsList /> },
       { path: "admin/queue", element: <Queue /> },
       { path: "settings/settings", element: <Settings /> },
       { path: "notifications/Notifications", element: <Notifications /> },
