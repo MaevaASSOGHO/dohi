@@ -224,6 +224,7 @@ useEffect(() => {
               {!isAuthenticated ? (
                 <Link
                   to="/login"
+                  type="button"
                   className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
                               ring-1 ring-neutral-300 dark:ring-neutral-700
                               hover:bg-neutral-100 dark:hover:bg-neutral-800/50
@@ -234,6 +235,7 @@ useEffect(() => {
                 </Link>
               ) : (
                 <button
+                  type="button" 
                   onClick={handleLogout}
                   className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
                               ring-1 ring-neutral-300 dark:ring-neutral-700

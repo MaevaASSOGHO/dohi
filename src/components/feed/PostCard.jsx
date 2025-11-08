@@ -109,7 +109,7 @@ export default function PostCard({
       {/* Cadre média */}
       <div className="relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800">
         {/* Badges en haut-gauche (plus petits) */}
-        <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-1.5 rounded-full bg-white/80 dark:bg-black/55 px-2 py-1 backdrop-blur-sm">
+        <div className="absolute left-0 top-0 z-10 m-2 flex items-center gap-1.5  px-2 py-1 backdrop-blur-sm">
           <button
             type="button"
             onClick={goSearchReports}
@@ -175,6 +175,7 @@ export default function PostCard({
 
         <Tip label={`${commentsCnt} commentaires`}>
           <button
+            type="button"
             onClick={() => setOpenComments((v) => !v)}
             className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white"
             disabled={!reportId}

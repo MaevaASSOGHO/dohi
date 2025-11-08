@@ -324,6 +324,7 @@ export default function Discover() {
           {(USE_MANUAL_LOAD || gridHasNext) && (
             <div className="py-2 text-center">
               <button
+                type="button"
                 disabled={!gridHasNext || gridFetchingNext}
                 onClick={()=>gridFetchNext()}
                 className="rounded border px-3 py-1 text-sm
