@@ -1,103 +1,34 @@
 // src/lib/api.js
 import axios from "axios";
 
-/**
- * On veut 3 garanties :
- * 1) Toujours appeler le backend avec un chemin commençant par /api/ (même si baseURL n'a pas /api)
- * 2) Normaliser feed/discover : si le back renvoie { items: [...] }, on transforme en [...]
- *    (et si le back renvoie déjà [...], on ne touche à rien)
- * 3) Aider le front historique : alias 'cover' si seule 'thumb.url' existe
- */
+// Base vide → URLs relatives (ex: /api/login) en DEV & PROD
+const ROOT = "";
 
-// Base racine SANS /api (on l’ajoute nous-mêmes sur chaque requête)
-const ROOT = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
-
+// Instance axios
 export const api = axios.create({
-  baseURL: ROOT, // racine du domaine
+  baseURL: ROOT,
   headers: { Accept: "application/json", "Content-Type": "application/json" },
+  withCredentials: false,
 });
 
-// Log discret pour vérifier la base côté front
-console.log("[api] ROOT =", ROOT);
-
-// Ajoute le Bearer si présent
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  // Normaliser l'URL : forcer le préfixe /api/
-  // - Si l’appel a déjà /api/ en tête, on laisse tel quel.
-  // - Sinon, on préfixe.
+  // Préfixer /api si manquant
   const url = config.url || "";
   if (!/^\/api\//.test(url)) {
     config.url = "/api" + (url.startsWith("/") ? url : `/${url}`);
   }
-
-  // Petit log utile (voir exactement quelle URL part)
-  // (visible dans la console desktop / sur mobile via devtools distant)
-  console.debug("[api →]", config.method?.toUpperCase(), config.baseURL + config.url);
-
+  // LOG de contrôle (garde-le provisoirement)
+  console.debug("[api →]", config.method?.toUpperCase(), (config.baseURL || "") + config.url);
   return config;
 });
 
-// Normalisation des réponses pour feed & discover
 api.interceptors.response.use(
-  (res) => {
-    try {
-      const fullUrl = (res.config?.baseURL || "") + (res.config?.url || "");
-      const isFeed = /\/api\/feed(?:\b|\/|\?)/.test(fullUrl);
-      const isDiscover = /\/api\/discover(?:\b|\/|\?)/.test(fullUrl);
-
-      if (isFeed || isDiscover) {
-        let data = res.data;
-
-        // --- Normaliser la liste d'items quel que soit le format d'entrée ---
-        let items;
-        if (Array.isArray(data)) {
-          // back renvoie déjà un tableau
-          items = data;
-        } else if (data && Array.isArray(data.items)) {
-          // back renvoie { items, page, total }
-          items = data.items;
-        } else {
-          items = []; // forme inattendue
-        }
-
-        // --- Alias d'image pour l'ancien front (cover / image_url) ---
-        items = items.map((row) => {
-          const r = row && typeof row === "object" ? { ...row } : row;
-          if (r && typeof r === "object") {
-            const thumbUrl = r?.thumb?.url ?? r?.thumb_url ?? r?.image_url ?? null;
-            if (r.cover == null) r.cover = thumbUrl;
-            if (r.image_url == null) r.image_url = r.cover ?? null;
-          }
-          return r;
-        });
-
-        // --- ***DIFFÉRENTIEL ENTRE FEED ET DISCOVER*** ---
-        if (isFeed) {
-          // Le composant Feed attend { items, page, total }
-          // Si le back a renvoyé un tableau, on le re-emballe proprement :
-          if (!data || !Array.isArray(data.items)) {
-            res.data = { items, page: 1, total: items.length };
-          } else {
-            // Le back avait déjà { items, ... } → on remplace juste items normalisés
-            res.data = { ...data, items };
-          }
-        } else {
-          // Discover attend un tableau simple
-          res.data = items;
-        }
-      }
-    } catch {
-      // pas de panique si la normalisation échoue
-    }
-
-    return res;
-  },
+  (res) => res,
   (err) => {
     const status = err?.response?.status ?? "no-response";
     const fullUrl = (err?.config?.baseURL || "") + (err?.config?.url || "");
