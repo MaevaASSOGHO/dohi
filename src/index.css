@@ -42,19 +42,7 @@ h1 {
   line-height: 1.1;
 }
 
-button, [type="button"], [type="submit"], [role="button"] {
-   -webkit-appearance: none; 
-   appearance: none; 
-   background: rgb(23 23 23); /* neutral-900 */ 
-   color: #fff; border: 1px solid rgb(64 64 64); /* neutral-700 */ 
-   border-radius: .6rem; } 
-   
-button:hover, [type="button"]:hover, [type="submit"]:hover, [role="button"]:hover { 
-  background: rgb(38 38 38); 
-  border-color: rgb(82 82 82); 
-} 
-button:active, [type="button"]:active, [type="submit"]:active, [role="button"]:active 
-{ background: rgb(64 64 64); } 
+
 
 /* Bouton sombre par défaut */ .btn-dark 
 { 
@@ -78,11 +66,45 @@ button:active, [type="button"]:active, [type="submit"]:active, [role="button"]:a
 { background: rgb(64 64 64); 
   transform: translateY(1px); 
 } 
-.btn-vote
-{ display:inline-flex;
-  align-items:center;
-  gap:.5rem;
-  background: transparent;
+/* Styles des boutons de vote réutilisables */
+.vote-btn {
+  @apply flex items-center gap-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.vote-btn--up {
+  @apply text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300;
+}
+
+.vote-btn--down {
+  @apply text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300;
+}
+
+.vote-btn--neutral {
+  @apply text-neutral-600 dark:text-neutral-400 hover:text-violet-600 dark:hover:text-violet-400 border border-transparent hover:border-violet-300 dark:hover:border-violet-700 rounded-md px-2 py-1;
+}
+
+.vote-icon {
+  @apply transition-all duration-200;
+}
+
+.vote-icon--active {
+  @apply text-violet-600 dark:text-violet-400;
+}
+
+.vote-icon--inactive {
+  @apply text-neutral-400 dark:text-neutral-600 hover:text-violet-500 dark:hover:text-violet-400;
+}
+
+.vote-count {
+  @apply transition-all duration-200 font-medium;
+}
+
+.vote-count--active {
+  @apply text-violet-600 dark:text-violet-400;
+}
+
+.vote-count--inactive {
+  @apply text-neutral-600 dark:text-neutral-400 hover:text-violet-600 dark:hover:text-violet-400;
 }
 
 /* Bouton "ghost" sombre */ 

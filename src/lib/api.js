@@ -1,38 +1,45 @@
 // src/lib/api.js
 import axios from "axios";
 
-// En prod, on veut utiliser le proxy Vercel (/api → backend) => baseURL relative "".
-// On ne met VITE_API_BASE que si on DOIT forcer un domaine (ex: dev local).
-const IS_BROWSER = typeof window !== "undefined";
+/**
+ * On veut 3 garanties :
+ * 1) Toujours appeler le backend avec un chemin commençant par /api/ (même si baseURL n'a pas /api)
+ * 2) Normaliser feed/discover : si le back renvoie { items: [...] }, on transforme en [...]
+ *    (et si le back renvoie déjà [...], on ne touche à rien)
+ * 3) Aider le front historique : alias 'cover' si seule 'thumb.url' existe
+ */
 
-// Si VITE_API_BASE est défini, on l'utilise (utile en local).
-// Sinon, on reste en relative ("") pour profiter du proxy/rewrite Vercel.
-const ROOT = (import.meta.env.VITE_API_BASE ?? "").toString().replace(/\/+$/, "");
+// Base racine SANS /api (on l’ajoute nous-mêmes sur chaque requête)
+const ROOT = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
 
 export const api = axios.create({
-  baseURL: ROOT, // "" en prod -> même origine
+  baseURL: ROOT, // racine du domaine
   headers: { Accept: "application/json", "Content-Type": "application/json" },
 });
 
-console.log("[api] ROOT =", ROOT || "(relative)");
+// Log discret pour vérifier la base côté front
+console.log("[api] ROOT =", ROOT);
 
-// Ajoute le Bearer si présent + force le préfixe /api
+// Ajoute le Bearer si présent
 api.interceptors.request.use((config) => {
-  const token = IS_BROWSER ? localStorage.getItem("token") : null;
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // Normaliser l'URL : forcer le préfixe /api/
+  // - Si l’appel a déjà /api/ en tête, on laisse tel quel.
+  // - Sinon, on préfixe.
   const url = config.url || "";
   if (!/^\/api\//.test(url)) {
     config.url = "/api" + (url.startsWith("/") ? url : `/${url}`);
   }
 
-  // (facultatif) Indiquer que c'est une requête AJAX pour certains WAF
-  config.headers["X-Requested-With"] = "XMLHttpRequest";
+  // Petit log utile (voir exactement quelle URL part)
+  // (visible dans la console desktop / sur mobile via devtools distant)
+  console.debug("[api →]", config.method?.toUpperCase(), config.baseURL + config.url);
 
-  console.debug("[api →]", config.method?.toUpperCase(), (config.baseURL || "") + config.url);
   return config;
 });
 

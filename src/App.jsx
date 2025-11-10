@@ -184,7 +184,7 @@ useEffect(() => {
 
           {/* Logo centré (légèrement plus grand) */}
           <div className="flex items-center justify-center h-full overflow-hidden">
-            <Link to="/" aria-label="Aller à l’accueil" className="block">
+            <Link to="/feed" aria-label="Aller à l’accueil" className="block">
               <img
                 src="/Dohi-logo2.png"
                 alt="OS Scammer"

@@ -9,24 +9,74 @@ import { statusLabel, statusBadgeClass } from "../../lib/reportStatus";
 // Icônes
 const IconReport = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M6 3h12l1 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V3z" stroke="currentColor" strokeWidth="1.5"/><path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>);
 const IconShield = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="currentColor" strokeWidth="1.5"/><path d="M9.5 12.5l2 2 3.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>);
-const IconThumbUp = ({active, ...p})=>(
-  <svg {...p} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"}>
-    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-const IconThumbDown = ({active, ...p})=>(
-  <svg {...p} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} style={{transform:"scaleY(-1)"}}>
-    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-const IconComment = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1 3 3H9l-5 5V6z" stroke="currentColor" strokeWidth="1.5"/></svg>);
-const IconPlus = (p)=>(<svg {...p} viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>);
+// Icônes avec le style violet
+const ICON_VIOLET = "#7c3aed";
 
+const IconThumbUp = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" />
+    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" />
+  </svg>
+);
+
+const IconThumbDown = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ transform: "scaleY(-1)" }}
+  >
+    <path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z" />
+    <path d="M7 10s3-6 5-6 1 3 1 3h4a3 3 0 0 1 3 3l-1 6a3 3 0 0 1-3 3H7" />
+  </svg>
+);
+
+const IconComment = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1 3 3H9l-5 5V6z" />
+  </svg>
+);
+
+const IconPlus = ({ className = "", active = false, ...p }) => (
+  <svg
+    {...p}
+    className={className}
+    viewBox="0 0 24 24"
+    fill={active ? ICON_VIOLET : "none"}
+    stroke={active ? "none" : ICON_VIOLET}
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
 // Tooltip
 const Tip = ({label, children}) => (
-  <div className="relative group inline-flex items-center">
+  <div className="relative group inline-flex items-center bg-transparent">
     {children}
     <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-white dark:bg-black/80 px-2 py-0.5 text-[10px] text-neutral-900 dark:text-neutral-200 opacity-0 transition-opacity group-hover:opacity-100 border border-neutral-200 dark:border-neutral-800">
       {label}
@@ -222,7 +272,7 @@ export default function ReportDetail() {
     <div className="mx-auto w-full max-w-3xl space-y-4 p-2">
       <button
         onClick={() => navigate(-1)}
-        className="btn-plain text-neutral-900 dark:text-neutral-100"
+        className="btn-plain text-neutral-900 dark:text-neutral-100 bg-transparent"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -327,30 +377,63 @@ export default function ReportDetail() {
       )}
 
       {/* Barre d'actions */}
-      <div className="flex items-center gap-5 px-1 text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="flex items-center gap-5 px-1 text-sm">
         <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
+        
         <Tip label={myVote==='u' ? "Cliquer pour annuler" : "Vote utile"}>
-          <button type="button" onClick={()=>doVote(true)} disabled={!reportId} className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote==='u' ? 'text-violet-600 dark:text-violet-400' : ''}`}>
+          <button 
+            type="button" 
+            onClick={()=>doVote(true)} 
+            disabled={!reportId} 
+            className={`flex items-center gap-1 ${
+              myVote === 'u' 
+                ? "text-violet-600 dark:text-violet-400" 
+                : "text-neutral-900 dark:text-white"
+            } hover:opacity-80 transition-opacity`}
+          >
             <IconThumbUp width="18" height="18" active={myVote==='u'} />
             <span>{useful}</span>
           </button>
         </Tip>
+        
         <Tip label={myVote==='n' ? "Cliquer pour annuler" : "Vote pas utile"}>
-          <button type="button" onClick={()=>doVote(false)} disabled={!reportId} className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote==='n' ? 'text-violet-600 dark:text-violet-400' : ''}`}>
+          <button 
+            type="button" 
+            onClick={()=>doVote(false)} 
+            disabled={!reportId} 
+            className={`flex items-center gap-1 ${
+              myVote === 'n' 
+                ? "text-violet-600 dark:text-violet-400" 
+                : "text-neutral-900 dark:text-white"
+            } hover:opacity-80 transition-opacity`}
+          >
             <IconThumbDown width="18" height="18" active={myVote==='n'} />
             <span>{notUseful}</span>
           </button>
         </Tip>
+
         <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
-        <Tip label={`${r?.commentsCount ?? 0} commentaires`}>
-          <button type="button" onClick={() => setOpenComments(true)} className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white" disabled={!reportId}>
+        
+        <Tip label={`${commentsCnt} commentaires`}>
+          <button 
+            type="button" 
+            onClick={() => setOpenComments(true)} 
+            className="flex items-center gap-1 text-neutral-900 dark:text-white hover:opacity-80 transition-opacity" 
+            disabled={!reportId}
+          >
             <IconComment width="18" height="18" />
-            <span>{r?.commentsCount ?? 0}</span>
+            <span>{commentsCnt}</span>
           </button>
         </Tip>
+        
         <span className="ml-auto text-xs text-neutral-500 dark:text-neutral-500" />
+        
         <Tip label="Ajouter un signalement">
-          <button type="button" onClick={goAddToThisCase} className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white">
+          <button 
+            type="button" 
+            onClick={goAddToThisCase} 
+            className="flex items-center gap-1 text-neutral-900 dark:text-white hover:opacity-80 transition-opacity"
+          >
             <IconPlus width="18" height="18" />
           </button>
         </Tip>

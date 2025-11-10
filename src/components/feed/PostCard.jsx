@@ -176,49 +176,57 @@ export default function PostCard({
       </div>
 
       {/* Barre d'actions */}
-      <div className="flex items-center gap-5 px-1 text-sm text-neutral-600 dark:text-neutral-400">
-        <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
+<div className="flex items-center gap-5 px-1 text-sm">
+  <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
 
-        <Tip label="Vote utile">
-          <button
-            type="btn-vote"
-            onClick={onVoteUseful}
-            className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote === "u" ? "text-violet-600 dark:text-violet-400" : ""}`}
-            disabled={!reportId}
-          >
-            <IconThumbUp width="18" height="18" />
-            <span>{usefulCnt}</span>
-          </button>
-        </Tip>
+  <Tip label={myVote === "u" ? "Annuler le vote" : "Vote utile"}>
+    <button
+      type="button"
+      onClick={onVoteUseful}
+      className={`flex items-center gap-1 ${
+        myVote === "u" 
+          ? "text-violet-600 dark:text-violet-400" 
+          : "text-neutral-900 dark:text-white"
+      } hover:opacity-80 transition-opacity`}
+      disabled={!reportId}
+    >
+      <IconThumbUp width="18" height="18" active={myVote === "u"} />
+      <span>{usefulCnt}</span>
+    </button>
+  </Tip>
 
-        <Tip label="Vote pas utile">
-          <button
-            type="btn-vote"
-            onClick={onVoteNotUseful}
-            className={`flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white ${myVote === "n" ? "text-violet-600 dark:text-violet-400" : ""}`}
-            disabled={!reportId}
-          >
-            <IconThumbDown width="18" height="18" />
-            <span>{notUsefulCnt}</span>
-          </button>
-        </Tip>
+  <Tip label={myVote === "n" ? "Annuler le vote" : "Vote pas utile"}>
+    <button
+      type="button"
+      onClick={onVoteNotUseful}
+      className={`flex items-center gap-1 ${
+        myVote === "n" 
+          ? "text-violet-600 dark:text-violet-400" 
+          : "text-neutral-900 dark:text-white"
+      } hover:opacity-80 transition-opacity`}
+      disabled={!reportId}
+    >
+      <IconThumbDown width="18" height="18" active={myVote === "n"} />
+      <span>{notUsefulCnt}</span>
+    </button>
+  </Tip>
 
-        <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
+  <span className="mx-1 h-4 w-px bg-neutral-300 dark:bg-neutral-700" />
 
-        <Tip label={`${commentsCnt} commentaires`}>
-          <button
-            type="btn-vote"
-            onClick={() => setOpenComments((v) => !v)}
-            className="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-white"
-            disabled={!reportId}
-          >
-            <IconComment width="18" height="18" />
-            <span>{commentsCnt}</span>
-          </button>
-        </Tip>
+  <Tip label={`${commentsCnt} commentaires`}>
+    <button
+      type="button"
+      onClick={() => setOpenComments((v) => !v)}
+      className="flex items-center gap-1 text-neutral-900 dark:text-white hover:opacity-80 transition-opacity"
+      disabled={!reportId}
+    >
+      <IconComment width="18" height="18" active={openComments} />
+      <span>{commentsCnt}</span>
+    </button>
+  </Tip>
 
-        <span className="ml-auto text-xs text-neutral-500 dark:text-neutral-500" />
-      </div>
+  <span className="ml-auto text-xs text-neutral-500 dark:text-neutral-500" />
+</div>
 
       {/* Commentaires inline */}
       {openComments && reportId ? (
