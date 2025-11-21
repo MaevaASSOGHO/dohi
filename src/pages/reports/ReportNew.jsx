@@ -1,8 +1,12 @@
 // src/pages/reports/ReportNew.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
-import { createCaseViaApi, createReportViaApi } from "../../lib/api";
+import {
+  api,
+  createCaseViaApi,
+  createReportViaApi,
+  uploadEvidenceViaApi,
+} from "../../lib/api";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
 /** Debounce tout simple */
@@ -31,7 +35,6 @@ function TextField({
   const [local, setLocal] = useState(value ?? "");
   // hydrate uniquement quand la valeur externe change réellement
   useEffect(() => {
-    // on garde la frappe en cours si identique
     if ((value ?? "") !== local) setLocal(value ?? "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -40,7 +43,11 @@ function TextField({
 
   return (
     <div>
-      {label && <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">{label}</label>}
+      {label && (
+        <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">
+          {label}
+        </label>
+      )}
       <Base
         type={as === "textarea" ? undefined : type}
         rows={as === "textarea" ? rows : undefined}
@@ -69,8 +76,8 @@ function TextField({
 }
 
 const SCENARIOS = [
-  { key: "phone",   label: "Numéro de téléphone" },
-  { key: "person",  label: "Personne" },
+  { key: "phone", label: "Numéro de téléphone" },
+  { key: "person", label: "Personne" },
   { key: "vehicle", label: "Véhicule" },
   { key: "company", label: "Entreprise / Marque" },
 ];
@@ -85,20 +92,25 @@ const SCAM_TYPES = [
   "Autre",
 ];
 
-const MAX_FILES  = 6;
-const MAX_TITLE  = 120;
-const MIN_STORY  = 20;
+const MAX_FILES = 6;
+const MAX_TITLE = 120;
+const MIN_STORY = 20;
 
 export default function ReportNew() {
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
 
-  const prefill   = location.state?.prefill   || null;
+  const prefill = location.state?.prefill || null;
   const forceStep = location.state?.forceStep || null;
 
   // ——— Profil
-  const { data: me, isLoading: meLoading, isError: meError, error: meErr } = useQuery({
+  const {
+    data: me,
+    isLoading: meLoading,
+    isError: meError,
+    error: meErr,
+  } = useQuery({
     queryKey: ["me"],
     queryFn: async () => (await api.get("/me")).data,
     retry: 0,
@@ -106,11 +118,13 @@ export default function ReportNew() {
 
   const isVerified = !!(
     me?.is_verified ||
-    (me?.kyc_status && ["verified", "approved"].includes(String(me.kyc_status).toLowerCase())) ||
+    (me?.kyc_status &&
+      ["verified", "approved"].includes(
+        String(me.kyc_status).toLowerCase()
+      )) ||
     me?.verified
   );
 
-  // invalider /me une seule fois au montage
   useEffect(() => {
     qc.invalidateQueries({ queryKey: ["me"] });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -141,20 +155,24 @@ export default function ReportNew() {
     staleTime: 10_000,
   });
 
-  // ——— Step 3: infos (source de vérité *globale* minimale)
-  const [title, setTitle]       = useState(prefill?.title || "");
+  // ——— Step 3: infos
+  const [title, setTitle] = useState(prefill?.title || "");
   const [scenario, setScenario] = useState(prefill?.scenario || "phone");
-  const [phone, setPhone]       = useState(prefill?.identifiers?.phone || "");
-  const [fullName, setFullName] = useState(prefill?.identifiers?.fullName || "");
-  const [brand, setBrand]       = useState(prefill?.identifiers?.brand || "");
-  const [website, setWebsite]   = useState(prefill?.identifiers?.website || "");
-  const [scamType, setScamType] = useState(prefill?.category || SCAM_TYPES[0]);
-  const [plate, setPlate]       = useState("");
-  const [socials, setSocials]   = useState("");
-  const [city, setCity]         = useState("");
-  const [date, setDate]         = useState("");
+  const [phone, setPhone] = useState(prefill?.identifiers?.phone || "");
+  const [fullName, setFullName] = useState(
+    prefill?.identifiers?.fullName || ""
+  );
+  const [brand, setBrand] = useState(prefill?.identifiers?.brand || "");
+  const [website, setWebsite] = useState(prefill?.identifiers?.website || "");
+  const [scamType, setScamType] = useState(
+    prefill?.category || SCAM_TYPES[0]
+  );
+  const [plate, setPlate] = useState("");
+  const [socials, setSocials] = useState("");
+  const [city, setCity] = useState("");
+  const [date, setDate] = useState("");
 
-  // ——— Step 4: preuves (preview local seulement)
+  // ——— Step 4: preuves (preview local)
   const [files, setFiles] = useState([]); // [{file, name, size, mime, localUrl}]
   const handlePickFiles = (e) => {
     const picked = Array.from(e.target.files || []);
@@ -177,56 +195,60 @@ export default function ReportNew() {
   };
 
   // ——— Step 5: récit + engagements
-  const [story, setStory]             = useState("");
+  const [story, setStory] = useState("");
   const [agreedRules, setAgreedRules] = useState(false);
   const [confirmTruth, setConfirmTruth] = useState(false);
 
-  const canNextFromStep1 = !!scenario;
-  const canNextFromStep2 = true;
-  const canNextFromStep3 = title.trim().length > 5 && title.trim().length <= MAX_TITLE;
+  const canNextFromStep3 =
+    title.trim().length > 5 && title.trim().length <= MAX_TITLE;
   const canNextFromStep4 = files.length <= MAX_FILES;
   const canNextFromStep5 = story.trim().length >= MIN_STORY;
-  const canPublish       = canNextFromStep5 && agreedRules && confirmTruth;
+  const canPublish = canNextFromStep5 && agreedRules && confirmTruth;
 
   // ——— Publication
   const publishMutation = useMutation({
     mutationFn: async () => {
-      // helper type du report
       const reportType =
-        scenario === "person" ? "Personne" :
-        scenario === "phone"  ? "Téléphone" :
-        scenario === "company"? "Entreprise" :
-        scenario === "vehicle"? "Véhicule" :
-        "Autre";
+        scenario === "person"
+          ? "Personne"
+          : scenario === "phone"
+          ? "Téléphone"
+          : scenario === "company"
+          ? "Entreprise"
+          : scenario === "vehicle"
+          ? "Véhicule"
+          : "Autre";
 
       // (A) Ajout à un dossier existant
       if (prefill?.caseId) {
         const caseId = prefill.caseId;
-        const createdReport = await api.post('/reports', {
+
+        // 1) création du report via helper proxy
+        const { data: reportData } = await createReportViaApi({
           case_id: caseId,
           title: title.trim(),
-          description: (story || '').trim(),
+          description: (story || "").trim(),
           type: reportType,
           category: scamType,
           is_public: true,
-          status: 'in_review',
+          status: "in_review",
         });
-        const reportId = createdReport?.data?.id || createdReport?.data?.report?.id;
-        if (!reportId) throw new Error("Report créé mais id manquant");
 
-        // Upload des médias PAR REPORT
+        const reportId =
+          reportData?.id || reportData?.report?.id || reportData?.report_id;
+        if (!reportId)
+          throw new Error("Report créé mais identifiant manquant.");
+
+        // 2) Upload des médias via helper proxy
         for (const f of files) {
-          const form = new FormData();
-          form.append("file", f.file);
-          const mime = (f.mime || f.file?.type || "").toLowerCase();
-          const evType = mime.startsWith("image/") ? "image" : mime.startsWith("video/") ? "video" : "doc";
-          form.append("type", evType);
-          await api.post(`/reports/${reportId}/evidence`, form, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          try {
+            await uploadEvidenceViaApi(reportId, f);
+          } catch (err) {
+            console.error("Upload evidence failed (existing case)", err);
+            // on n'interrompt pas toute la publication pour un média
+          }
         }
 
-        // (facultatif) ping debug
         try {
           await api.post("/debug/make-notif", {
             user_id: me?.id,
@@ -240,32 +262,37 @@ export default function ReportNew() {
 
       // (B) Nouveau dossier
       const kind =
-        scenario === "phone"  ? "phone"  :
-        scenario === "person" ? "person" :
-        scenario === "vehicle"? "company" : // à adapter si tu crées un modèle “vehicle”
-        "company";
+        scenario === "phone"
+          ? "phone"
+          : scenario === "person"
+          ? "person"
+          : scenario === "vehicle"
+          ? "company" // à adapter si tu crées un modèle “vehicle”
+          : "company";
 
       const entityName =
         kind === "phone"
-          ? (phone || fullName || brand || plate || website || "Inconnu")
-          : (brand || fullName || phone || plate || website || "Inconnu");
+          ? phone || fullName || brand || plate || website || "Inconnu"
+          : brand || fullName || phone || plate || website || "Inconnu";
 
-      // 1) create case
+      // 1) create case (proxy)
       const { data: caseData } = await createCaseViaApi({
         entity: {
           name: entityName,
           kind,
-          phone: kind === "phone" ? (phone || null) : null,
+          phone: kind === "phone" ? phone || null : null,
           url: website || null,
         },
         category: scamType || "Autre",
         summary: title.trim() || null,
         risk_level: "medium",
       });
-      const caseId = caseData?.case?.id || caseData?.id;
-      if (!caseId) throw new Error("Création du dossier impossible (id manquant).");
 
-      // 2) create report
+      const caseId = caseData?.case?.id || caseData?.id;
+      if (!caseId)
+        throw new Error("Création du dossier impossible (id manquant).");
+
+      // 2) create report (proxy)
       const { data: reportData } = await createReportViaApi({
         case_id: caseId,
         title: title.trim(),
@@ -276,22 +303,21 @@ export default function ReportNew() {
         status: "in_review",
       });
 
-      const reportId = reportData?.id || reportData?.report_id || null;
-      if (!reportId) throw new Error("Report créé mais id manquant");
+      const reportId =
+        reportData?.id || reportData?.report_id || reportData?.report?.id;
+      if (!reportId)
+        throw new Error("Report créé mais identifiant manquant.");
 
-      // 3) upload médias
+      // 3) upload médias (proxy)
       for (const f of files) {
-        const form = new FormData();
-        form.append("file", f.file);
-        const mime = (f.mime || f.file?.type || "").toLowerCase();
-        const evType = mime.startsWith("image/") ? "image" : mime.startsWith("video/") ? "video" : "doc";
-        form.append("type", evType);
-        await api.post(`/reports/${reportId}/evidence`, form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        try {
+          await uploadEvidenceViaApi(reportId, f);
+        } catch (err) {
+          console.error("Upload evidence failed (new case)", err);
+          // on log mais on ne bloque pas entièrement le signalement
+        }
       }
 
-      // (facultatif) ping debug
       try {
         await api.post("/debug/make-notif", {
           user_id: me?.id,
@@ -304,7 +330,9 @@ export default function ReportNew() {
     },
 
     onSuccess: ({ reportId }) => {
-      alert("Votre signalement a été envoyé et va passer en examen.");
+      alert(
+        "Votre signalement a été envoyé et va passer en examen.\nSi certains médias ne sont pas visibles, réessayez de les ajouter."
+      );
       qc.invalidateQueries({ queryKey: ["feed"] });
       qc.invalidateQueries({ queryKey: ["me"] });
       navigate(`/reports/${reportId}`);
@@ -312,13 +340,16 @@ export default function ReportNew() {
 
     onError: (err) => {
       const status = err?.response?.status;
-      const data   = err?.response?.data;
+      const data = err?.response?.data;
       console.error("Publish failed", status, data, err?.message);
-      alert(`Échec de la publication${status ? ` (HTTP ${status})` : ""}. Regarde la console / logs serveur.`);
+      alert(
+        `Échec de la publication${
+          status ? ` (HTTP ${status})` : ""
+        }. Regarde la console / logs serveur.`
+      );
     },
   });
 
-  // ——— UI helpers
   const Step = ({ n, title, children }) => (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
@@ -331,11 +362,15 @@ export default function ReportNew() {
         >
           {n}
         </div>
-        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">{title}</h2>
+        <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
+          {title}
+        </h2>
       </div>
-      <div className="rounded-2xl border p-4
+      <div
+        className="rounded-2xl border p-4
                       border-neutral-300 bg-white
-                      dark:border-neutral-800 dark:bg-neutral-950/60">
+                      dark:border-neutral-800 dark:bg-neutral-950/60"
+      >
         {children}
       </div>
     </section>
@@ -366,17 +401,25 @@ export default function ReportNew() {
     </div>
   );
 
-  // ——— Render
-  if (meLoading) return <div className="p-4 text-sm text-neutral-600 dark:text-neutral-400">Chargement…</div>;
+  if (meLoading)
+    return (
+      <div className="p-4 text-sm text-neutral-600 dark:text-neutral-400">
+        Chargement…
+      </div>
+    );
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-3">
-      <h3 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Nouveau signalement</h3>
+      <h3 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        Nouveau signalement
+      </h3>
 
       {meError && (
-        <div className="rounded border p-3 text-sm
+        <div
+          className="rounded border p-3 text-sm
                         border-yellow-300 bg-yellow-50 text-yellow-800
-                        dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                        dark:border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200"
+        >
           Impossible de récupérer votre profil (/me)
           {meErr?.response?.status ? ` (${meErr.response.status})` : ""}.
         </div>
@@ -388,7 +431,8 @@ export default function ReportNew() {
           {isVerified ? (
             <div className="space-y-3 text-sm">
               <p className="text-neutral-700 dark:text-neutral-300">
-                Votre compte est <strong>vérifié</strong>. Vous pouvez continuer et publier.
+                Votre compte est <strong>vérifié</strong>. Vous pouvez continuer
+                et publier.
               </p>
               <div className="mt-4">
                 <NextPrev canNext={true} onNext={() => setStep(1)} />
@@ -396,21 +440,29 @@ export default function ReportNew() {
             </div>
           ) : (
             <div className="space-y-3 text-sm">
-              <div className="rounded border p-3
+              <div
+                className="rounded border p-3
                               border-yellow-300 bg-yellow-50 text-yellow-800
-                              dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100">
-                <div className="font-medium mb-1">Publication possible sans vérification</div>
+                              dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100"
+              >
+                <div className="font-medium mb-1">
+                  Publication possible sans vérification
+                </div>
                 <p>
-                  Votre signalement sera <strong>mis en examen</strong> par la modération. Pour{" "}
+                  Votre signalement sera <strong>mis en examen</strong> par la
+                  modération. Pour{" "}
                   <em>accélérer la validation</em>, nous recommandons de{" "}
-                  <strong>vérifier votre identité (KYC)</strong> avant ou après la publication.
+                  <strong>vérifier votre identité (KYC)</strong> avant ou après
+                  la publication.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => navigate("/kyc", { state: { from: "/reports/new" } })}
+                  onClick={() =>
+                    navigate("/kyc", { state: { from: "/reports/new" } })
+                  }
                   className="rounded bg-white px-3 py-1 text-sm font-medium text-black hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
                 >
                   Vérifier mon compte
@@ -418,7 +470,10 @@ export default function ReportNew() {
 
                 <button
                   type="button"
-                  onClick={() => { setSkippedKyc(true); setStep(1); }}
+                  onClick={() => {
+                    setSkippedKyc(true);
+                    setStep(1);
+                  }}
                   className="rounded border px-3 py-1 text-sm
                              border-neutral-300 text-neutral-700 hover:bg-neutral-50
                              dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-900
@@ -429,7 +484,8 @@ export default function ReportNew() {
               </div>
 
               <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                Vous pourrez revenir faire la vérification depuis le menu (portrait/paramètres) à tout moment.
+                Vous pourrez revenir faire la vérification depuis le menu
+                (portrait/paramètres) à tout moment.
               </p>
             </div>
           )}
@@ -463,8 +519,8 @@ export default function ReportNew() {
       {step === 2 && (
         <Step n={2} title="Rechercher des dossiers existants">
           <p className="text-sm mb-2 text-neutral-700 dark:text-neutral-300">
-            Avant de créer un nouveau dossier, vérifiez s’il n’existe pas déjà (y compris variantes
-            d’orthographe).
+            Avant de créer un nouveau dossier, vérifiez s’il n’existe pas déjà
+            (y compris variantes d’orthographe).
           </p>
           <TextField
             value={preQ}
@@ -472,31 +528,51 @@ export default function ReportNew() {
             placeholder="Nom, numéro, plaque, site, @compte…"
           />
           {preQ.trim().length < minLen && (
-            <div className="p-3 text-xs text-neutral-600 dark:text-neutral-500">Tape au moins {minLen} caractère…</div>
+            <div className="p-3 text-xs text-neutral-600 dark:text-neutral-500">
+              Tape au moins {minLen} caractère…
+            </div>
           )}
           {preLoading && preQ.trim().length >= minLen && (
-            <div className="p-3 text-sm text-neutral-600 dark:text-neutral-400">Recherche…</div>
+            <div className="p-3 text-sm text-neutral-600 dark:text-neutral-400">
+              Recherche…
+            </div>
           )}
-          {!preLoading && preQ.trim().length >= minLen && (
-            precheck?.items?.length ? precheck.items.map((it) => {
-              const href = it.reportId
-                ? `/reports/${it.reportId}`
-                : `/discover?q=${encodeURIComponent(it.entityName || it.title || preQ)}`;
-              return (
-                <Link key={it.id} to={href} className="block p-3 hover:bg-neutral-50 dark:hover:bg-neutral-900/60 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-neutral-900 dark:text-neutral-100">{it.title || it.entityName || "Dossier"}</span>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {it.createdAt ? new Date(it.createdAt).toLocaleDateString() : ""}
-                    </span>
-                  </div>
-                  <div className="text-xs text-neutral-600 dark:text-neutral-400">{it.type}</div>
-                </Link>
-              );
-            }) : (
-              <div className="p-3 text-sm text-neutral-600 dark:text-neutral-500">Aucun dossier trouvé.</div>
-            )
-          )}
+          {!preLoading &&
+            preQ.trim().length >= minLen &&
+            (precheck?.items?.length ? (
+              precheck.items.map((it) => {
+                const href = it.reportId
+                  ? `/reports/${it.reportId}`
+                  : `/discover?q=${encodeURIComponent(
+                      it.entityName || it.title || preQ
+                    )}`;
+                return (
+                  <Link
+                    key={it.id}
+                    to={href}
+                    className="block p-3 hover:bg-neutral-50 dark:hover:bg-neutral-900/60 rounded-md"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                        {it.title || it.entityName || "Dossier"}
+                      </span>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {it.createdAt
+                          ? new Date(it.createdAt).toLocaleDateString()
+                          : ""}
+                      </span>
+                    </div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                      {it.type}
+                    </div>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="p-3 text-sm text-neutral-600 dark:text-neutral-500">
+                Aucun dossier trouvé.
+              </div>
+            ))}
           <NextPrev canNext={true} onNext={() => setStep(3)} />
         </Step>
       )}
@@ -515,7 +591,9 @@ export default function ReportNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">Type d’arnaque</label>
+                <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">
+                  Type d’arnaque
+                </label>
                 <select
                   value={scamType}
                   onChange={(e) => setScamType(e.target.value)}
@@ -541,12 +619,10 @@ export default function ReportNew() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">Date</label>
-                <TextField
-                  value={date}
-                  onCommit={(v) => setDate(v)}
-                  type="date"
-                />
+                <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">
+                  Date
+                </label>
+                <TextField value={date} onCommit={(v) => setDate(v)} type="date" />
               </div>
             </div>
 
@@ -598,7 +674,7 @@ export default function ReportNew() {
               />
             </div>
           </div>
-          <NextPrev canNext={title.trim().length > 5 && title.trim().length <= MAX_TITLE} onNext={() => setStep(4)} />
+          <NextPrev canNext={canNextFromStep3} onNext={() => setStep(4)} />
         </Step>
       )}
 
@@ -639,9 +715,16 @@ export default function ReportNew() {
                                dark:border-neutral-800 dark:bg-neutral-900"
                   >
                     {f.mime?.startsWith("image/") ? (
-                      <img src={f.localUrl} alt={f.name} className="h-28 w-full object-cover" />
+                      <img
+                        src={f.localUrl}
+                        alt={f.name}
+                        className="h-28 w-full object-cover"
+                      />
                     ) : f.mime?.startsWith("video/") ? (
-                      <video src={f.localUrl} className="h-28 w-full object-cover" />
+                      <video
+                        src={f.localUrl}
+                        className="h-28 w-full object-cover"
+                      />
                     ) : (
                       <div className="h-28 grid place-items-center text-xs p-2 break-words text-neutral-600 dark:text-neutral-400">
                         {f.name || f.mime}
@@ -659,7 +742,7 @@ export default function ReportNew() {
               </ul>
             )}
           </div>
-          <NextPrev canNext={files.length <= MAX_FILES} onNext={() => setStep(5)} />
+          <NextPrev canNext={canNextFromStep4} onNext={() => setStep(5)} />
         </Step>
       )}
 
@@ -683,7 +766,7 @@ export default function ReportNew() {
               {story.trim().length} caractères
             </div>
           </div>
-          <NextPrev canNext={story.trim().length >= MIN_STORY} onNext={() => setStep(6)} />
+          <NextPrev canNext={canNextFromStep5} onNext={() => setStep(6)} />
         </Step>
       )}
 
@@ -691,18 +774,30 @@ export default function ReportNew() {
       {step === 6 && (
         <Step n={6} title="Aperçu & engagement">
           <div className="space-y-3 text-sm">
-            <div className="rounded border p-3
+            <div
+              className="rounded border p-3
                             border-neutral-300 bg-white
-                            dark:border-neutral-800 dark:bg-neutral-900/60">
-              <div className="font-medium text-neutral-900 dark:text-neutral-100">{title}</div>
-              <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                {scamType} • {city || "Lieu inconnu"} • {date || "Date inconnue"}
+                            dark:border-neutral-800 dark:bg-neutral-900/60"
+            >
+              <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                {title}
               </div>
-              <div className="mt-2 whitespace-pre-wrap text-neutral-800 dark:text-neutral-100">{story}</div>
+              <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                {scamType} • {city || "Lieu inconnu"} •{" "}
+                {date || "Date inconnue"}
+              </div>
+              <div className="mt-2 whitespace-pre-wrap text-neutral-800 dark:text-neutral-100">
+                {story}
+              </div>
               {files.length > 0 && (
                 <div className="mt-2 grid grid-cols-3 gap-1">
                   {files.map((f) => (
-                    <img key={f.localUrl} src={f.localUrl} alt="evidence" className="h-24 w-full object-cover rounded" />
+                    <img
+                      key={f.localUrl}
+                      src={f.localUrl}
+                      alt="evidence"
+                      className="h-24 w-full object-cover rounded"
+                    />
                   ))}
                 </div>
               )}
@@ -727,10 +822,13 @@ export default function ReportNew() {
               Je certifie l’exactitude de mon témoignage.
             </label>
             {skippedKyc && (
-              <div className="rounded border p-2 text-xs
+              <div
+                className="rounded border p-2 text-xs
                               border-yellow-300 bg-yellow-50 text-yellow-800
-                              dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100">
-                Astuce : la vérification d’identité peut accélérer la validation de votre signalement.
+                              dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-100"
+              >
+                Astuce : la vérification d’identité peut accélérer la validation
+                de votre signalement.
               </div>
             )}
             {publishMutation.isError && (

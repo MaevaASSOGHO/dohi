@@ -1,7 +1,10 @@
 // src/pages/reports/ReportDetail.jsx
 import { useParams, useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../lib/api";
+import api, {
+  voteReportViaApi,
+  unvoteReportViaApi,
+} from "../../lib/api";
 import InlineComments from "../../components/feed/InlineComments";
 import { useRef, useState, useEffect, useMemo } from "react";
 import { statusLabel, statusBadgeClass } from "../../lib/reportStatus";
@@ -224,21 +227,59 @@ export default function ReportDetail() {
 
   async function doVote(wantedUseful) {
     if (!reportId) return;
-    if ((myVote==='u' && wantedUseful) || (myVote==='n' && !wantedUseful)) {
-      const prevU=useful, prevN=notUseful, prevMy=myVote;
-      if (myVote==='u') setUseful(u=>Math.max(0,u-1));
-      if (myVote==='n') setNotUseful(n=>Math.max(0,n-1));
+
+    // 1) Si on reclique sur le même vote → on annule (unvote)
+    if (
+      (myVote === "u" && wantedUseful) ||
+      (myVote === "n" && !wantedUseful)
+    ) {
+      const prevU = useful;
+      const prevN = notUseful;
+      const prevMy = myVote;
+
+      if (myVote === "u") setUseful((u) => Math.max(0, u - 1));
+      if (myVote === "n") setNotUseful((n) => Math.max(0, n - 1));
       setMyVote(null);
-      try { await api.delete(`/reports/${reportId}/vote`); localStorage.removeItem(`vote:${reportId}`); }
-      catch(e){ setUseful(prevU); setNotUseful(prevN); setMyVote(prevMy); }
+
+      try {
+        await unvoteReportViaApi(reportId);
+        localStorage.removeItem(`vote:${reportId}`);
+      } catch (e) {
+        // rollback en cas d'erreur
+        setUseful(prevU);
+        setNotUseful(prevN);
+        setMyVote(prevMy);
+      }
       return;
     }
-    if (myVote==null) {
-      const prevU=useful, prevN=notUseful;
-      if (wantedUseful) setUseful(u=>u+1); else setNotUseful(n=>n+1);
-      setMyVote(wantedUseful?'u':'n');
-      try { await api.post(`/reports/${reportId}/vote`, { useful: wantedUseful }); localStorage.setItem(`vote:${reportId}`, wantedUseful?'u':'n'); }
-      catch(e){ setUseful(prevU); setNotUseful(prevN); setMyVote(null); }
+
+    // 2) Nouveau vote (ou changement de type de vote)
+    const prevU = useful;
+    const prevN = notUseful;
+    const prevMy = myVote;
+
+    // La version originale ne gérait que "pas encore voté",
+    // on garde la logique simple : on incrémente le côté choisi.
+    if (myVote == null) {
+      if (wantedUseful) setUseful((u) => u + 1);
+      else setNotUseful((n) => n + 1);
+    } else {
+      // si un jour tu veux gérer le switch u → n ou n → u, c'est ici
+    }
+
+    setMyVote(wantedUseful ? "u" : "n");
+
+    try {
+      await voteReportViaApi(reportId, wantedUseful);
+      localStorage.setItem(
+        `vote:${reportId}`,
+        wantedUseful ? "u" : "n"
+      );
+    } catch (e) {
+      // rollback en cas d'erreur
+      setUseful(prevU);
+      setNotUseful(prevN);
+      setMyVote(prevMy);
     }
   }
 

@@ -146,4 +146,98 @@ export function createReportViaApi(payload) {
   });
 }
 
+// Evidence helper
+export function uploadEvidenceViaApi(reportId, fileObj) {
+  if (!reportId) throw new Error("reportId manquant pour l'upload d'évidence");
+
+  const form = new FormData();
+  form.append("file", fileObj.file);
+  const mime = (fileObj.mime || fileObj.file?.type || "").toLowerCase();
+  const evType = mime.startsWith("image/")
+    ? "image"
+    : mime.startsWith("video/")
+    ? "video"
+    : "doc";
+  form.append("type", evType);
+
+  if (import.meta.env.DEV) {
+    // Dev : direct backend Laravel
+    return api.post(`/api/reports/${reportId}/evidence`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    `/api/reports-evidence-proxy?reportId=${encodeURIComponent(reportId)}`,
+    form,
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      // NE PAS fixer Content-Type ici : Axios le mettra avec la bonne boundary
+    }
+  );
+}
+
+// --- Vote d'un report (utile / pas utile) ---
+
+export function voteReportViaApi(reportId, useful) {
+  if (!reportId) throw new Error("reportId manquant pour vote");
+
+  if (import.meta.env.DEV) {
+    // Dev : direct Laravel
+    return api.post(`/api/reports/${reportId}/vote`, { useful });
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/report-vote-proxy",
+    { reportId, useful },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+
+export function unvoteReportViaApi(reportId) {
+  if (!reportId) throw new Error("reportId manquant pour unvote");
+
+  if (import.meta.env.DEV) {
+    // Dev : direct Laravel
+    return api.delete(`/api/reports/${reportId}/vote`);
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/report-unvote-proxy",
+    { reportId },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+
+// Logout helper
+export function logoutViaApi() {
+  if (import.meta.env.DEV) {
+    return api.post("/api/logout");
+  }
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/logout-proxy",
+    {},
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
 export default api;
