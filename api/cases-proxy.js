@@ -1,0 +1,43 @@
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    const payload =
+      typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    // on passe le Bearer token s'il existe
+    if (req.headers.authorization) {
+      headers.Authorization = req.headers.authorization;
+    }
+
+    const apiResponse = await fetch("https://dohi.chat-mabelle.com/api/cases", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+
+    const text = await apiResponse.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { raw: text };
+    }
+
+    res.status(apiResponse.status).json(data);
+  } catch (error) {
+    console.error("Proxy cases error:", error);
+    res.status(500).json({
+      message: "Proxy error",
+      error: error.message || String(error),
+    });
+  }
+}

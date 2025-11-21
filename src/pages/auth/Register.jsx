@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "../../lib/api";
+import { registerViaApi } from "../../lib/api";
 import { Link, useNavigate } from "react-router-dom";
 
 const schema = z.object({
@@ -34,19 +35,14 @@ export default function Register() {
         password: values.password,
         password_confirmation: values.confirm,
       };
-
-      // 🔁 plus simple : on laisse api.js gérer dev/prod
-      const { data } = await api.post("/register", payload);
-
+      const { data } = await registerViaApi(payload);
       const token = data?.token || data?.access_token || null;
       if (token) localStorage.setItem("token", token);
-
-      navigate("/", { replace: true }); // ou "/login" selon ton flow
+      navigate("/", { replace: true });
     } catch (e) {
       const status = e?.response?.status;
       const firstError =
         e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
-
       setServerError(
         firstError ||
           e?.response?.data?.message ||

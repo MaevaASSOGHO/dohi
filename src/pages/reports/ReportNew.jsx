@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
+import { createCaseViaApi, createReportViaApi } from "../../lib/api";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
 /** Debounce tout simple */
@@ -250,7 +251,7 @@ export default function ReportNew() {
           : (brand || fullName || phone || plate || website || "Inconnu");
 
       // 1) create case
-      const createdCase = await api.post("/cases", {
+      const { data: caseData } = await createCaseViaApi({
         entity: {
           name: entityName,
           kind,
@@ -261,20 +262,21 @@ export default function ReportNew() {
         summary: title.trim() || null,
         risk_level: "medium",
       });
-      const caseId = createdCase?.data?.case?.id || createdCase?.data?.id;
+      const caseId = caseData?.case?.id || caseData?.id;
       if (!caseId) throw new Error("Création du dossier impossible (id manquant).");
 
       // 2) create report
-      const createdReport = await api.post('/reports', {
+      const { data: reportData } = await createReportViaApi({
         case_id: caseId,
         title: title.trim(),
-        description: (story || '').trim(),
+        description: (story || "").trim(),
         type: reportType,
         category: scamType,
         is_public: true,
-        status: 'in_review',
+        status: "in_review",
       });
-      const reportId = createdReport?.data?.id || createdReport?.data?.report?.id;
+
+      const reportId = reportData?.id || reportData?.report_id || null;
       if (!reportId) throw new Error("Report créé mais id manquant");
 
       // 3) upload médias
