@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { api } from "../../lib/api";
-import { loginViaApi } from "../../lib/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 function ForgotPasswordModal({ open, onClose }) {
@@ -72,16 +71,18 @@ export default function Login() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const { data } = await loginViaApi(values);
+      // ⚠️ NOTE : on utilise "/login" (sans /api)
+      const { data } = await api.post("/login", values);
       const token = data?.token || data?.access_token;
       if (token) localStorage.setItem("token", token);
-      window.dispatchEvent(new Event("auth:changed")); // ⬅️ met à jour la sidebar
+      window.dispatchEvent(new Event("auth:changed"));
       const dest = state?.from || "/feed";
       navigate(dest, { replace: true });
     } catch (e) {
       const status = e?.response?.status;
       const firstError =
-        e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
+        e?.response?.data?.errors &&
+        Object.values(e.response.data.errors).flat()[0];
       setServerError(
         firstError ||
           e?.response?.data?.message ||

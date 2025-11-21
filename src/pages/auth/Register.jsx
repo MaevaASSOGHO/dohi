@@ -28,31 +28,32 @@ export default function Register() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const REGISTER_PATH = import.meta.env.VITE_REGISTER_PATH || "/api/register";
       const payload = {
         name: values.name,
         email: values.email,
         password: values.password,
         password_confirmation: values.confirm,
       };
-      const { data } = await api.post(REGISTER_PATH, payload);
+
+      // 🔁 plus simple : on laisse api.js gérer dev/prod
+      const { data } = await api.post("/register", payload);
+
       const token = data?.token || data?.access_token || null;
       if (token) localStorage.setItem("token", token);
-      navigate("/", { replace: true }); // ou navigate("/login") selon ton flow
-    } catch (e) {
-        const status = e?.response?.status;
-        const firstError =
-          e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
-        setServerError(
-          firstError ||
-          e?.response?.data?.message ||
-          `Erreur (status ${status || 'no-response'})`
-        );
-      }
-        
-  };
 
-  
+      navigate("/", { replace: true }); // ou "/login" selon ton flow
+    } catch (e) {
+      const status = e?.response?.status;
+      const firstError =
+        e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
+
+      setServerError(
+        firstError ||
+          e?.response?.data?.message ||
+          `Erreur (status ${status || "no-response"})`
+      );
+    }
+  };
 
   return (
     <div className="mx-auto max-w-md rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/60 p-6 backdrop-blur-sm">
