@@ -16,17 +16,30 @@ console.log("[api] ROOT =", ROOT);
 
 // Prefixe toujours /api
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  let token = null;
+
+  // On protège l’accès à localStorage
+  try {
+    if (typeof window !== "undefined" && "localStorage" in window) {
+      token = window.localStorage.getItem("token");
+    }
+  } catch {
+    token = null;
+  }
+
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   const url = config.url || "";
   if (!/^\/api\//.test(url)) {
     config.url = "/api" + (url.startsWith("/") ? url : `/${url}`);
   }
+
   return config;
 });
+
 
 // Normalisation feed/discover
 api.interceptors.response.use(
