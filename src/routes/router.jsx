@@ -34,7 +34,6 @@ export const router = createBrowserRouter([
       { path: "register", element: <Register /> },
       { path: "/", element: <App />, errorElement: <ErrorFallback />,  
       },
-      { path: "debug", element: <DebugData /> },
     ],
   },
 ]);
