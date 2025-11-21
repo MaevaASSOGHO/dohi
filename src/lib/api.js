@@ -107,6 +107,14 @@ export async function loginViaApi(payload) {
   });
 }
 
+// Inscription helper
+export function registerViaApi(payload) {
+  if (import.meta.env.DEV) {
+    return api.post("/api/register", payload);
+  }
+  return axios.post("/api/register-proxy", payload);
+}
+
 // Création de case
 export function createCaseViaApi(payload) {
   if (import.meta.env.DEV) {
