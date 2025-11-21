@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Link, useSearchParams } from "react-router-dom";
-import ReportListItem from "./reports/ReportsList";
+import ReportListItem from "../components/report/ReportListItem";
 
 /** --- Config d’affichage de la grille --- */
 const TILE_RATIO = "square";         // "square" (1:1) ou "3/4"

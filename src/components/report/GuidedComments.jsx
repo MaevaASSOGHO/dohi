@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../../lib/api";
+import api, { commentReportViaApi } from "../../lib/api";
 
 function timeAgo(iso) {
   const d = new Date(iso); const s = Math.floor((Date.now()-d.getTime())/1000);
@@ -30,13 +30,28 @@ export default function GuidedComments({ reportId, autoFocus = false }) {
   useEffect(() => {
     if (autoFocus) {
       setOpen(true);
-      setTimeout(() => anchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+      setTimeout(
+        () =>
+          anchorRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          }),
+        50
+      );
     }
   }, [autoFocus]);
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["report-comments", reportId],
-    queryFn: async () => (await api.get(`/reports/${reportId}/comments`)).data,
+    queryFn: async () =>
+      (await api.get(`/reports/${reportId}/comments`)).data,
     enabled: !!reportId,
   });
 
@@ -45,14 +60,15 @@ export default function GuidedComments({ reportId, autoFocus = false }) {
 
   const mutation = useMutation({
     mutationFn: async ({ kind, message }) =>
-      (await api.post(`/reports/${reportId}/comments`, { kind, message })).data,
+      (await commentReportViaApi(reportId, { kind, message })).data,
     onSuccess: () => {
       setMessage("");
       qc.invalidateQueries({ queryKey: ["report-comments", reportId] });
     },
   });
 
-  const canSubmit = message.trim().length >= 5 && message.trim().length <= 2000;
+  const canSubmit =
+    message.trim().length >= 5 && message.trim().length <= 2000;
 
   return (
     <section ref={anchorRef} className="space-y-3">
@@ -72,7 +88,10 @@ export default function GuidedComments({ reportId, autoFocus = false }) {
       {/* Formulaire guidé */}
       {open && (
         <form
-          onSubmit={(e) => { e.preventDefault(); if (canSubmit) mutation.mutate({ kind, message }); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (canSubmit) mutation.mutate({ kind, message });
+          }}
           className="rounded-xl border border-neutral-800 p-3 space-y-2 bg-neutral-950/50"
         >
           <div className="grid gap-2 sm:grid-cols-3">
@@ -84,7 +103,9 @@ export default function GuidedComments({ reportId, autoFocus = false }) {
                 className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm"
               >
                 {Object.entries(KIND_LABELS).map(([k, label]) => (
-                  <option key={k} value={k}>{label}</option>
+                  <option key={k} value={k}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </label>
@@ -108,7 +129,9 @@ export default function GuidedComments({ reportId, autoFocus = false }) {
               {mutation.isPending ? "Envoi…" : "Publier"}
             </button>
             {mutation.isError && (
-              <span className="text-sm text-red-300">Échec de l’envoi, réessaie.</span>
+              <span className="text-sm text-red-300">
+                Échec de l’envoi, réessaie.
+              </span>
             )}
             <span className="ml-auto text-xs text-neutral-500">
               {message.length}/2000
@@ -119,15 +142,25 @@ export default function GuidedComments({ reportId, autoFocus = false }) {
 
       {/* Liste des commentaires */}
       <div className="space-y-2">
-        {isLoading && <div className="text-sm text-neutral-400">Chargement…</div>}
+        {isLoading && (
+          <div className="text-sm text-neutral-400">Chargement…</div>
+        )}
         {isError && (
           <div className="text-sm text-red-300">
-            Impossible de charger les commentaires{error?.response?.status ? ` (${error.response.status})` : ""}.
-            <button onClick={() => refetch()} className="ml-2 underline">Réessayer</button>
+            Impossible de charger les commentaires
+            {error?.response?.status
+              ? ` (${error.response.status})`
+              : ""}
+            .
+            <button onClick={() => refetch()} className="ml-2 underline">
+              Réessayer
+            </button>
           </div>
         )}
-        {(!isLoading && comments.length === 0) ? (
-          <div className="text-sm text-neutral-400">Aucun commentaire pour l’instant.</div>
+        {!isLoading && comments.length === 0 ? (
+          <div className="text-sm text-neutral-400">
+            Aucun commentaire pour l’instant.
+          </div>
         ) : null}
 
         {comments.map((c) => (

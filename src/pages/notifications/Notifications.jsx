@@ -1,7 +1,10 @@
 // src/pages/notifications/NotificationsPage.jsx
 import { useEffect, useState } from "react";
 import NotificationItem from "./NotificationItem";
-import { api } from "../../lib/api";
+import api, {
+  markAllNotificationsReadViaApi,
+  markNotificationReadStatusViaApi,
+} from "../../lib/api";
 
 export default function NotificationsPage() {
   const [items, setItems] = useState([]);
@@ -10,37 +13,71 @@ export default function NotificationsPage() {
   const [only, setOnly]   = useState("all"); // 'all' | 'unread'
   const [busy, setBusy]   = useState(false);
 
-  const load = async (p=1) => {
+  const load = async (p = 1) => {
     setBusy(true);
     try {
-      const { data } = await api.get("/notifications", { params: { page: p, pageSize: 20, only } });
+      const { data } = await api.get("/notifications", {
+        params: { page: p, pageSize: 20, only },
+      });
       setItems(data.items || []);
       setPage(data.page || 1);
       setTotal(data.total || 0);
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
-  useEffect(() => { load(1); }, [only]);
+  useEffect(() => {
+    load(1);
+  }, [only]);
 
   const markAllRead = async () => {
-    await api.post("/notifications/read-all");
+    await markAllNotificationsReadViaApi();
     load(page);
   };
 
   const toggleRead = async (id, read) => {
-    const endpoint = read ? "/notifications/unread" : "/notifications/read";
-    await api.post(endpoint, { ids: [id] });
-    setItems(prev => prev.map(n => n.id === id ? { ...n, read: !read, readAt: !read ? new Date().toISOString() : null } : n));
+    // Optimiste : on met à jour localement
+    setItems((prev) =>
+      prev.map((n) =>
+        n.id === id
+          ? {
+              ...n,
+              read: !read,
+              readAt: !read ? new Date().toISOString() : null,
+            }
+          : n
+      )
+    );
+
+    try {
+      await markNotificationReadStatusViaApi(id, read);
+    } catch (e) {
+      // rollback en cas d'erreur
+      setItems((prev) =>
+        prev.map((n) =>
+          n.id === id
+            ? {
+                ...n,
+                read,
+                readAt: read ? new Date().toISOString() : null,
+              }
+            : n
+        )
+      );
+    }
   };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Notifications</h2>
+        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          Notifications
+        </h2>
         <div className="flex items-center gap-2">
           <select
             value={only}
-            onChange={e=>setOnly(e.target.value)}
+            onChange={(e) => setOnly(e.target.value)}
             className="rounded border border-neutral-300 dark:border-neutral-700
                        bg-white dark:bg-neutral-900
                        text-neutral-900 dark:text-neutral-100
@@ -70,8 +107,12 @@ export default function NotificationsPage() {
             {busy ? "Chargement…" : "Aucune notification."}
           </div>
         )}
-        {items.map(n => (
-          <NotificationItem key={n.id} n={n} onToggleRead={() => toggleRead(n.id, n.read)} />
+        {items.map((n) => (
+          <NotificationItem
+            key={n.id}
+            n={n}
+            onToggleRead={() => toggleRead(n.id, n.read)}
+          />
         ))}
       </div>
     </div>

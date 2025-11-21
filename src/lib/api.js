@@ -224,7 +224,130 @@ export function unvoteReportViaApi(reportId) {
   );
 }
 
+export function commentReportViaApi(reportId, { kind, message }) {
+  if (!reportId) throw new Error("reportId manquant pour le commentaire");
+
+  if (import.meta.env.DEV) {
+    // Dev : direct backend Laravel
+    return api.post(`/api/reports/${reportId}/comments`, { kind, message });
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/report-comment-proxy",
+    { reportId, kind, message },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+
+// Notifications helper
+
+export function markAllNotificationsReadViaApi() {
+  if (import.meta.env.DEV) {
+    // Dev : direct backend (api = axios avec baseURL=VITE_API_BASE)
+    return api.post("/notifications/read-all");
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/notifications-read-all-proxy",
+    {},
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+
+export function markNotificationReadStatusViaApi(id, currentlyRead) {
+  if (!id) throw new Error("id de notification manquant");
+
+  const endpointDev = currentlyRead
+    ? "/notifications/unread"
+    : "/notifications/read";
+
+  if (import.meta.env.DEV) {
+    return api.post(endpointDev, { ids: [id] });
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const endpointProd = currentlyRead
+    ? "/api/notifications-unread-proxy"
+    : "/api/notifications-read-proxy";
+
+  return axios.post(
+    endpointProd,
+    { ids: [id] },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+
+// KYC helper
+
+export function kycSubmitViaApi(formData) {
+  if (import.meta.env.DEV) {
+    // Dev : direct Laravel
+    return api.post("/kyc", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  // Prod : via proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post("/api/kyc-submit-proxy", formData, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    // NE PAS fixer Content-Type ici : axios le mettra avec la boundary
+  });
+}
+
+export function kycCancelViaApi() {
+  if (import.meta.env.DEV) {
+    return api.delete("/kyc");
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/kyc-cancel-proxy",
+    {},
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+
+export function kycSignedUrlViaApi(path, ttl) {
+  if (import.meta.env.DEV) {
+    return api.post("/kyc/signed-url", { path, ttl });
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/kyc-signed-url-proxy",
+    { path, ttl },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
 // Logout helper
+
 export function logoutViaApi() {
   if (import.meta.env.DEV) {
     return api.post("/api/logout");

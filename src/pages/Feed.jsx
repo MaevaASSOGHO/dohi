@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
+import api, {
+  voteReportViaApi,
+  unvoteReportViaApi,
+} from "../lib/api";
 import PostCard from "../components/feed/PostCard";
 import { useNavigate } from "react-router-dom";
 
@@ -79,7 +82,7 @@ function PostCardHydrated({ item, onOpen }) {
       });
 
       try {
-        await api.delete(`/reports/${reportId}/vote`);
+        await unvoteReportViaApi(reportId);   
         localStorage.removeItem(`vote:${reportId}`);
       } catch (e) {
         setUseful(prevU);
@@ -110,7 +113,7 @@ function PostCardHydrated({ item, onOpen }) {
       });
 
       try {
-        await api.post(`/reports/${reportId}/vote`, { useful: wantedUseful });
+        await voteReportViaApi(reportId, wantedUseful);
         localStorage.setItem(`vote:${reportId}`, wantedUseful ? "u" : "n");
       } catch (e) {
         setUseful(prevU);
