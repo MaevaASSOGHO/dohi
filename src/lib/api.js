@@ -107,4 +107,35 @@ export async function loginViaApi(payload) {
   });
 }
 
+// Création de case
+export function createCaseViaApi(payload) {
+  if (import.meta.env.DEV) {
+    // Dev : direct backend
+    return api.post("/api/cases", payload);
+  }
+
+  // Prod : proxy, même schéma que login
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post("/api/cases-proxy", payload, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+}
+
+// Création de report
+export function createReportViaApi(payload) {
+  if (import.meta.env.DEV) {
+    // Dev : direct backend
+    return api.post("/api/reports", payload);
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post("/api/reports-proxy", payload, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+}
+
 export default api;

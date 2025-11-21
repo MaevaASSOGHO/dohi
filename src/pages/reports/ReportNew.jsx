@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import { createCaseViaApi, createReportViaApi } from "../../lib/authApi";
+import { createCaseViaApi, createReportViaApi } from "../../lib/api";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
 /** Debounce tout simple */

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { api } from "../../lib/api";
-import { loginViaApi } from "../../lib/authApi";
+import { loginViaApi } from "../../lib/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 function ForgotPasswordModal({ open, onClose }) {
