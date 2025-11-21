@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { api } from "../../lib/api";
+import { loginViaApi } from "../../lib/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 function ForgotPasswordModal({ open, onClose }) {
@@ -71,7 +72,7 @@ export default function Login() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const { data } = await api.post("/api/login", values);
+      const { data } = await loginViaApi(values);
       const token = data?.token || data?.access_token;
       if (token) localStorage.setItem("token", token);
       window.dispatchEvent(new Event("auth:changed")); // ⬅️ met à jour la sidebar
@@ -83,11 +84,12 @@ export default function Login() {
         e?.response?.data?.errors && Object.values(e.response.data.errors).flat()[0];
       setServerError(
         firstError ||
-        e?.response?.data?.message ||
-        `Erreur (status ${status || 'no-response'})`
+          e?.response?.data?.message ||
+          `Erreur (status ${status || "no-response"})`
       );
     }
   };
+
 
   return (
     <div className="mx-auto max-w-md rounded-2xl border border-violet-200/50 dark:border-violet-900/80 bg-white/80 dark:bg-neutral-900/60 p-6 backdrop-blur-sm">

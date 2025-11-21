@@ -1,72 +1,34 @@
 import axios from "axios";
 
-/**
- * Client HTTP centralisé pour l'API DOHI.
- *
- * Objectifs :
- * 1) Toujours viser /api/... (même si baseURL n’a pas /api)
- * 2) Normaliser feed/discover quand nécessaire
- * 3) Aider l’ancien front (cover/image_url)
- * 4) Gérer proprement les cookies (WAF o2switch) ⇒ withCredentials:true
- */
-
-// Base SANS /api (on l’ajoute nous-mêmes)
 const ROOT = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
 
 export const api = axios.create({
   baseURL: ROOT,
+  withCredentials: true, // ← important avec le WAF/cookies
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest", // aide certaines protections à reconnaître un XHR
   },
-  // IMPORTANT : permet au navigateur de recevoir/envoyer les cookies
-  // (ex. o2s-chl posé par le WAF) pour la requête suivante.
-  withCredentials: true,
-  timeout: 20000,
 });
 
-// Log discret pour diagnostiquer la base (visible dev uniquement)
-if (import.meta.env.DEV) {
-  console.log("[api] ROOT =", ROOT);
-}
+console.log("[api] ROOT =", ROOT);
 
-// ———————————————— Request interceptor ———————————————— //
+// Prefixe toujours /api
 api.interceptors.request.use((config) => {
-  // Token Bearer si présent (auth par jeton côté API)
   const token = localStorage.getItem("token");
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  // Forcer le préfixe /api/ une seule fois
   const url = config.url || "";
   if (!/^\/api\//.test(url)) {
     config.url = "/api" + (url.startsWith("/") ? url : `/${url}`);
   }
-
-  // Debug lisible
-  if (import.meta.env.DEV) {
-    console.debug("[api →]", (config.method || "GET").toUpperCase(), config.baseURL + config.url);
-  }
   return config;
 });
 
-// ———————————————— Helpers normalisation ———————————————— //
-function normalizeItemsPayload(data) {
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.items)) return data.items;
-  return [];
-}
-
-function inflateFeedLike(data, items) {
-  if (!data || !Array.isArray(data.items)) {
-    return { items, page: 1, total: items.length };
-  }
-  return { ...data, items };
-}
-
-// ———————————————— Response interceptor ———————————————— //
+// Normalisation feed/discover
 api.interceptors.response.use(
   (res) => {
     try {
@@ -75,7 +37,13 @@ api.interceptors.response.use(
       const isDiscover = /\/api\/discover(?:\b|\/|\?)/.test(fullUrl);
 
       if (isFeed || isDiscover) {
-        const items = normalizeItemsPayload(res.data).map((row) => {
+        let data = res.data;
+        let items;
+        if (Array.isArray(data)) items = data;
+        else if (data && Array.isArray(data.items)) items = data.items;
+        else items = [];
+
+        items = items.map((row) => {
           const r = row && typeof row === "object" ? { ...row } : row;
           if (r && typeof r === "object") {
             const thumbUrl = r?.thumb?.url ?? r?.thumb_url ?? r?.image_url ?? null;
@@ -85,37 +53,58 @@ api.interceptors.response.use(
           return r;
         });
 
-        res.data = isFeed ? inflateFeedLike(res.data, items) : items;
+        if (isFeed) {
+          if (!data || !Array.isArray(data.items)) {
+            res.data = { items, page: 1, total: items.length };
+          } else {
+            res.data = { ...data, items };
+          }
+        } else {
+          res.data = items;
+        }
       }
-    } catch {
-      // silencieux : on ne casse pas la réponse
-    }
+    } catch {}
     return res;
   },
   async (err) => {
-    // Cas typiques : 307 du WAF (cookie de challenge), 405, 4xx/5xx…
-    const cfg = err?.config || {};
+    const cfg = err?.config;
     const status = err?.response?.status ?? "no-response";
-    const fullUrl = (cfg.baseURL || "") + (cfg.url || "");
+    const loc = err?.response?.headers?.location;
+    const sameUrl = !!(loc && cfg && (loc === (cfg.baseURL || "") + (cfg.url || "")));
 
-    if (import.meta.env.DEV) {
-      console.error("[api ✕]", status, fullUrl, err?.message);
-    }
-
-    // Si le WAF renvoie 307 (rarement visible côté XHR), on peut retenter UNE fois.
-    // NB: Dans le navigateur, les redirections sont gérées nativement.
-    // Ce retry couvre certains cas où le cookie vient d’être posé entre deux requêtes.
-    if (status === 307 && !cfg.__retried307) {
+    // ↻ Gestion WAF: 307 temporaire → on ping pour prendre le cookie, puis on rejoue UNE FOIS
+    if (status === 307 && sameUrl && !cfg?._wafRetried) {
       try {
-        const retryCfg = { ...cfg, __retried307: true };
-        return await api.request(retryCfg);
-      } catch (e) {
-        // tombe dans le reject plus bas
-      }
+        await api.get("/ping", { params: { t: Date.now() }, withCredentials: true });
+      } catch {}
+      cfg._wafRetried = true;
+      return api(cfg);
     }
 
+    console.error("[api ✕]", status, (cfg?.baseURL || "") + (cfg?.url || ""), err?.message);
     return Promise.reject(err);
   }
 );
+
+/**
+ * Login helper :
+ * - en dev → parle directement à Laravel (http://localhost:8000/api/login)
+ * - en prod (Vercel) → passe par /api/login-proxy (same-origin, pas de CORS/Tiger)
+ */
+export async function loginViaApi(payload) {
+  if (import.meta.env.DEV) {
+    // Dev local : on garde le client API normal
+    return api.post("/login", payload);
+  }
+
+  // Prod (Vercel) : on parle au proxy en same-origin
+  return axios.post("/api/login-proxy", payload, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    // pas besoin de withCredentials ici, c'est same-origin avec Vercel
+  });
+}
 
 export default api;

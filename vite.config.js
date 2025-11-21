@@ -1,15 +1,17 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+// vite.config.js
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
-    host: true,           // écoute sur 0.0.0.0
-    port: 5173,
-    // hmr: { host: '10.10.148.70',
-    //    clientPort: 5173,
-    //   protocol: 'ws', 
-    //  }, // ← ton IP
+    proxy: {
+      "/api": {
+        target: "https://dohi.chat-mabelle.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p, // conserve /api
+      },
+    },
   },
-})
+});
