@@ -12,8 +12,6 @@ import Settings from "../pages/settings/Settings";
 import ErrorFallback from "../components/ErrorFallback";
 import KycWizardOnly from "../pages/kyc/KycWizardOnly";
 import Notifications from "../pages/notifications/Notifications";
-import Debug from "../pages/Debug";
-import DebugData from "../pages/DebugData";
 import App from "../App";
 
 export const router = createBrowserRouter([
