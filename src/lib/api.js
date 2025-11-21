@@ -1,52 +1,34 @@
 import axios from "axios";
 
-const isDev = import.meta.env.DEV;
-
-// En dev : on parle au backend Laravel (http://localhost:8000)
-// En prod : on parle au proxy Vercel (same-origin)
-const ROOT = isDev
-  ? (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/+$/, "")
-  : "/api/proxy";
+const ROOT = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
 
 export const api = axios.create({
   baseURL: ROOT,
-  withCredentials: isDev, // cookies seulement en dev si tu en as besoin
+  withCredentials: true, // ← important avec le WAF/cookies
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
-    "X-Requested-With": "XMLHttpRequest",
+    "X-Requested-With": "XMLHttpRequest", // aide certaines protections à reconnaître un XHR
   },
 });
 
 console.log("[api] ROOT =", ROOT);
 
+// Prefixe toujours /api
 api.interceptors.request.use((config) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  config.headers = config.headers || {};
+  const token = localStorage.getItem("token");
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  let url = config.url || "";
-
-  if (isDev) {
-    // Dev : on parle direct à Laravel, on prefixe /api si besoin
-    if (!/^\/api\//.test(url)) {
-      url = "/api" + (url.startsWith("/") ? url : `/${url}`);
-    }
-    config.url = url;
-  } else {
-    // Prod : on parle à /api/proxy/[...path]
-    // On enlève les / initiaux et un éventuel 'api/' au début
-    url = url.replace(/^\/+/, ""); // "/cases" -> "cases" ; "/api/cases" -> "api/cases"
-    url = url.replace(/^api\//, ""); // "api/cases" -> "cases"
-    config.url = url; // → /api/proxy/cases
+  const url = config.url || "";
+  if (!/^\/api\//.test(url)) {
+    config.url = "/api" + (url.startsWith("/") ? url : `/${url}`);
   }
-
   return config;
 });
 
-// Normalisation feed/discover comme avant
+// Normalisation feed/discover
 api.interceptors.response.use(
   (res) => {
     try {
@@ -84,17 +66,45 @@ api.interceptors.response.use(
     } catch {}
     return res;
   },
-  (err) => {
+  async (err) => {
     const cfg = err?.config;
     const status = err?.response?.status ?? "no-response";
-    console.error(
-      "[api ✕]",
-      status,
-      (cfg?.baseURL || "") + (cfg?.url || ""),
-      err?.message
-    );
+    const loc = err?.response?.headers?.location;
+    const sameUrl = !!(loc && cfg && (loc === (cfg.baseURL || "") + (cfg.url || "")));
+
+    // ↻ Gestion WAF: 307 temporaire → on ping pour prendre le cookie, puis on rejoue UNE FOIS
+    if (status === 307 && sameUrl && !cfg?._wafRetried) {
+      try {
+        await api.get("/ping", { params: { t: Date.now() }, withCredentials: true });
+      } catch {}
+      cfg._wafRetried = true;
+      return api(cfg);
+    }
+
+    console.error("[api ✕]", status, (cfg?.baseURL || "") + (cfg?.url || ""), err?.message);
     return Promise.reject(err);
   }
 );
+
+/**
+ * Login helper :
+ * - en dev → parle directement à Laravel (http://localhost:8000/api/login)
+ * - en prod (Vercel) → passe par /api/login-proxy (same-origin, pas de CORS/Tiger)
+ */
+export async function loginViaApi(payload) {
+  if (import.meta.env.DEV) {
+    // Dev local : on garde le client API normal
+    return api.post("/login", payload);
+  }
+
+  // Prod (Vercel) : on parle au proxy en same-origin
+  return axios.post("/api/login-proxy", payload, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    // pas besoin de withCredentials ici, c'est same-origin avec Vercel
+  });
+}
 
 export default api;
