@@ -1,32 +1,26 @@
 import axios from "axios";
 
-const ROOT = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(
-  /\/+$/,
-  ""
-);
+const ROOT = (import.meta.env.VITE_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
 
-// Client HTTP principal
 export const api = axios.create({
   baseURL: ROOT,
-  withCredentials: true, // important pour le cookie TigerProtect
+  withCredentials: true, // ← important avec le WAF/cookies
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
-    "X-Requested-With": "XMLHttpRequest",
+    "X-Requested-With": "XMLHttpRequest", // aide certaines protections à reconnaître un XHR
   },
 });
 
 console.log("[api] ROOT =", ROOT);
 
-// Prefixe toujours /api et ajoute le Bearer
+// Prefixe toujours /api
 api.interceptors.request.use((config) => {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   const url = config.url || "";
   if (!/^\/api\//.test(url)) {
     config.url = "/api" + (url.startsWith("/") ? url : `/${url}`);
@@ -34,7 +28,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Normalisation feed/discover + gestion TigerProtect (307)
+// Normalisation feed/discover
 api.interceptors.response.use(
   (res) => {
     try {
@@ -52,8 +46,7 @@ api.interceptors.response.use(
         items = items.map((row) => {
           const r = row && typeof row === "object" ? { ...row } : row;
           if (r && typeof r === "object") {
-            const thumbUrl =
-              r?.thumb?.url ?? r?.thumb_url ?? r?.image_url ?? null;
+            const thumbUrl = r?.thumb?.url ?? r?.thumb_url ?? r?.image_url ?? null;
             if (r.cover == null) r.cover = thumbUrl;
             if (r.image_url == null) r.image_url = r.cover ?? null;
           }
@@ -77,63 +70,83 @@ api.interceptors.response.use(
     const cfg = err?.config;
     const status = err?.response?.status ?? "no-response";
     const loc = err?.response?.headers?.location;
-    const sameUrl = !!(
-      loc &&
-      cfg &&
-      loc === (cfg.baseURL || "") + (cfg.url || "")
-    );
+    const sameUrl = !!(loc && cfg && (loc === (cfg.baseURL || "") + (cfg.url || "")));
 
-    // 307 TigerProtect : on ping /api/ping pour choper le cookie, puis on rejoue UNE fois
+    // ↻ Gestion WAF: 307 temporaire → on ping pour prendre le cookie, puis on rejoue UNE FOIS
     if (status === 307 && sameUrl && !cfg?._wafRetried) {
       try {
-        await api.get("/ping", {
-          params: { t: Date.now() },
-          withCredentials: true,
-        });
+        await api.get("/ping", { params: { t: Date.now() }, withCredentials: true });
       } catch {}
       cfg._wafRetried = true;
       return api(cfg);
     }
 
-    console.error(
-      "[api ✕]",
-      status,
-      (cfg?.baseURL || "") + (cfg?.url || ""),
-      err?.message
-    );
+    console.error("[api ✕]", status, (cfg?.baseURL || "") + (cfg?.url || ""), err?.message);
     return Promise.reject(err);
   }
 );
 
-/* ------------------------------------------------------------------
- * HELPERS : désormais TOUS parlent directement au backend Laravel.
- * ------------------------------------------------------------------ */
+/**
+ * Login helper :
+ * - en dev → parle directement à Laravel (http://localhost:8000/api/login)
+ * - en prod (Vercel) → passe par /api/login-proxy (same-origin, pas de CORS/Tiger)
+ */
+export async function loginViaApi(payload) {
+  if (import.meta.env.DEV) {
+    // Dev local : on garde le client API normal
+    return api.post("/login", payload);
+  }
 
-// LOGIN
-export function loginViaApi(payload) {
-  // → /api/login
-  return api.post("/login", payload);
+  // Prod (Vercel) : on parle au proxy en same-origin
+  return axios.post("/api/login-proxy", payload, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    // pas besoin de withCredentials ici, c'est same-origin avec Vercel
+  });
 }
 
-// REGISTER
+// Inscription helper
 export function registerViaApi(payload) {
-  // → /api/register
-  return api.post("/register", payload);
+  if (import.meta.env.DEV) {
+    return api.post("/api/register", payload);
+  }
+  return axios.post("/api/register-proxy", payload);
 }
 
-// CASES
+// Création de case
 export function createCaseViaApi(payload) {
-  // → /api/cases
-  return api.post("/cases", payload);
+  if (import.meta.env.DEV) {
+    // Dev : direct backend
+    return api.post("/api/cases", payload);
+  }
+
+  // Prod : proxy, même schéma que login
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post("/api/cases-proxy", payload, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 }
 
-// REPORTS
+// Création de report
 export function createReportViaApi(payload) {
-  // → /api/reports
-  return api.post("/reports", payload);
+  if (import.meta.env.DEV) {
+    // Dev : direct backend
+    return api.post("/api/reports", payload);
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post("/api/reports-proxy", payload, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 }
 
-// EVIDENCE (upload fichier)
+// Evidence helper
 export function uploadEvidenceViaApi(reportId, fileObj) {
   if (!reportId) throw new Error("reportId manquant pour l'upload d'évidence");
 
@@ -147,71 +160,205 @@ export function uploadEvidenceViaApi(reportId, fileObj) {
     : "doc";
   form.append("type", evType);
 
-  // → /api/reports/{id}/evidence
-  return api.post(`/reports/${reportId}/evidence`, form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  if (import.meta.env.DEV) {
+    // Dev : direct backend Laravel
+    return api.post(`/api/reports/${reportId}/evidence`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    `/api/reports-evidence-proxy?reportId=${encodeURIComponent(reportId)}`,
+    form,
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      // NE PAS fixer Content-Type ici : Axios le mettra avec la bonne boundary
+    }
+  );
 }
 
-// VOTE REPORT
+// --- Vote d'un report (utile / pas utile) ---
+
 export function voteReportViaApi(reportId, useful) {
   if (!reportId) throw new Error("reportId manquant pour vote");
-  // → /api/reports/{id}/vote
-  return api.post(`/reports/${reportId}/vote`, { useful });
+
+  if (import.meta.env.DEV) {
+    // Dev : direct Laravel
+    return api.post(`/api/reports/${reportId}/vote`, { useful });
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/report-vote-proxy",
+    { reportId, useful },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
 }
 
 export function unvoteReportViaApi(reportId) {
   if (!reportId) throw new Error("reportId manquant pour unvote");
-  // → /api/reports/{id}/vote
-  return api.delete(`/reports/${reportId}/vote`);
+
+  if (import.meta.env.DEV) {
+    // Dev : direct Laravel
+    return api.delete(`/api/reports/${reportId}/vote`);
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/report-unvote-proxy",
+    { reportId },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
 }
 
-// COMMENTAIRES
 export function commentReportViaApi(reportId, { kind, message }) {
   if (!reportId) throw new Error("reportId manquant pour le commentaire");
-  // → /api/reports/{id}/comments
-  return api.post(`/reports/${reportId}/comments`, { kind, message });
+
+  if (import.meta.env.DEV) {
+    // Dev : direct backend Laravel
+    return api.post(`/api/reports/${reportId}/comments`, { kind, message });
+  }
+
+  // Prod : proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/report-comment-proxy",
+    { reportId, kind, message },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
 }
 
-// NOTIFICATIONS
+// Notifications helper
+
 export function markAllNotificationsReadViaApi() {
-  // → /api/notifications/read-all
-  return api.post("/notifications/read-all");
+  if (import.meta.env.DEV) {
+    // Dev : direct backend
+    return api.post("/notifications/read-all");
+  }
+
+  // Prod : proxy unique
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/notifications-proxy",
+    { action: "read-all" },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
 }
 
 export function markNotificationReadStatusViaApi(id, currentlyRead) {
   if (!id) throw new Error("id de notification manquant");
 
-  const endpoint = currentlyRead
-    ? "/notifications/unread"
-    : "/notifications/read";
+  const action = currentlyRead ? "unread" : "read";
 
-  // → /api/notifications/(un)read
-  return api.post(endpoint, { ids: [id] });
+  if (import.meta.env.DEV) {
+    const endpoint =
+      action === "unread"
+        ? "/notifications/unread"
+        : "/notifications/read";
+    return api.post(endpoint, { ids: [id] });
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/notifications-proxy",
+    { action, ids: [id] },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
 }
 
-// KYC
+// KYC helper
+
 export function kycSubmitViaApi(formData) {
-  // → /api/kyc
-  return api.post("/kyc", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+  if (import.meta.env.DEV) {
+    // Dev : direct Laravel
+    return api.post("/kyc", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
+
+  // Prod : via proxy Vercel
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post("/api/kyc-proxy", formData, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    // NE PAS fixer Content-Type ici : axios le mettra avec la boundary
   });
 }
 
 export function kycCancelViaApi() {
-  // → /api/kyc (DELETE)
-  return api.delete("/kyc");
+  if (import.meta.env.DEV) {
+    return api.delete("/kyc");
+  }
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/kyc-proxy",
+    {},
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
 }
 
 export function kycSignedUrlViaApi(path, ttl) {
-  // → /api/kyc/signed-url
-  return api.post("/kyc/signed-url", { path, ttl });
-}
+  if (import.meta.env.DEV) {
+    return api.post("/kyc/signed-url", { path, ttl });
+  }
 
-// LOGOUT
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  return axios.post(
+    "/api/kyc-proxy",
+    { path, ttl },
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
+// Logout helper
+
 export function logoutViaApi() {
-  // adapte si ta route est différente (ex: /logout)
-  return api.post("/auth/logout");
-}
+  if (import.meta.env.DEV) {
+    return api.post("/api/logout");
+  }
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+  return axios.post(
+    "/api/logout-proxy",
+    {},
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
+  );
+}
 export default api;
