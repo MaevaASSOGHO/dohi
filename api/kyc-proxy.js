@@ -10,10 +10,17 @@ export default async function handler(req, res) {
   const isMultipart = ctype.startsWith("multipart/form-data");
 
   try {
-    // 1) SUBMIT KYC : multipart/form-data
+    // 1) CAS MULTIPART = SUBMIT KYC (avec fichier)
     if (isMultipart) {
+      // On lit tout le body dans un Buffer
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      const bodyBuffer = Buffer.concat(chunks);
+
       const headers = {
-        "Content-Type": req.headers["content-type"],
+        "Content-Type": req.headers["content-type"], // garde la boundary
         Accept: "application/json",
       };
       if (req.headers.authorization) {
@@ -23,12 +30,12 @@ export default async function handler(req, res) {
       const upstream = await fetch("https://dohi.chat-mabelle.com/api/kyc", {
         method: "POST",
         headers,
-        body: req, // on stream le body brut (FormData)
+        body: bodyBuffer,
       });
 
+      const status = upstream.status;
       const contentType =
         upstream.headers.get("content-type") || "application/json";
-      const status = upstream.status;
       const arrayBuf = await upstream.arrayBuffer();
 
       res.status(status);
@@ -36,7 +43,7 @@ export default async function handler(req, res) {
       return res.send(Buffer.from(arrayBuf));
     }
 
-    // 2) ACTIONS JSON : cancel / signed-url
+    // 2) CAS JSON = cancel / signed-url
     const rawBody =
       typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
     const body = rawBody ? JSON.parse(rawBody || "{}") : {};
@@ -50,6 +57,7 @@ export default async function handler(req, res) {
       headers.Authorization = req.headers.authorization;
     }
 
+    // 2.a) Annuler le KYC
     if (action === "cancel") {
       const upstream = await fetch("https://dohi.chat-mabelle.com/api/kyc", {
         method: "DELETE",
@@ -66,10 +74,13 @@ export default async function handler(req, res) {
       return res.status(upstream.status).json(data);
     }
 
+    // 2.b) Signed URL
     if (action === "signed-url") {
       const { path, ttl } = body;
       if (!path) {
-        return res.status(400).json({ message: "path requis pour signed-url" });
+        return res
+          .status(400)
+          .json({ message: "path requis pour signed-url" });
       }
 
       const upstream = await fetch(
@@ -91,14 +102,16 @@ export default async function handler(req, res) {
       return res.status(upstream.status).json(data);
     }
 
+    // 2.c) Action inconnue
     return res.status(400).json({
-      message: "action invalide (multipart=submit, ou JSON: cancel / signed-url)",
+      message:
+        "action invalide (multipart = submit KYC, JSON: cancel / signed-url)",
     });
   } catch (error) {
     console.error("Proxy kyc error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Proxy error",
-      error: error.message || String(error),
+      error: error?.message || String(error),
     });
   }
 }
