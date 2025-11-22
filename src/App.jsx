@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import "./App.css";
 import HamburgerButton from "./components/HamburgerButton";
-import { api } from "./lib/api";
+import { api, logoutViaApi } from "./lib/api";
 
 /* Auth réactive (token localStorage + events cross-tab) */
 function useAuthReactive() {
@@ -160,11 +160,20 @@ useEffect(() => {
   const CONTENT_MAX_W = "max-w-[1200px]";
 
   async function handleLogout() {
-    try { await api.post("/logout"); } catch {}
-    try { localStorage.removeItem("token"); } catch {}
+    try {
+      await logoutViaApi();
+    } catch (e) {
+      // on ignore, l'important c'est de nettoyer côté front
+    }
+
+    try {
+      localStorage.removeItem("token");
+    } catch {}
+
     window.dispatchEvent(new Event("auth:changed"));
     navigate("/login", { replace: true });
   }
+
 
   return (
     <div className="min-h-dvh w-full bg-white text-neutral-900 dark:bg-black dark:text-neutral-100">

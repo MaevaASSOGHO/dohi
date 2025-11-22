@@ -1,3 +1,5 @@
+// api/logout-proxy.js
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -7,17 +9,22 @@ export default async function handler(req, res) {
   try {
     const headers = {
       Accept: "application/json",
+      "Content-Type": "application/json",
     };
+
+    // On propage le Bearer token si présent
     if (req.headers.authorization) {
       headers.Authorization = req.headers.authorization;
     }
 
-    const apiResponse = await fetch("https://dohi.chat-mabelle.com/api/logout", {
+    const upstream = await fetch("https://dohi.chat-mabelle.com/api/logout", {
       method: "POST",
       headers,
     });
 
-    const text = await apiResponse.text();
+    const status = upstream.status;
+    const text = await upstream.text();
+
     let data;
     try {
       data = JSON.parse(text);
@@ -25,12 +32,12 @@ export default async function handler(req, res) {
       data = { raw: text };
     }
 
-    res.status(apiResponse.status).json(data);
+    return res.status(status).json(data);
   } catch (error) {
-    console.error("Proxy logout error:", error);
-    res.status(500).json({
-      message: "Proxy error",
-      error: error.message || String(error),
+    console.error("logout-proxy error:", error);
+    return res.status(500).json({
+      message: "Proxy error (logout)",
+      error: error?.message || String(error),
     });
   }
 }
