@@ -78,7 +78,7 @@ export default function Register() {
           <input
             {...register("email")}
             type="email"
-            className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2"
+            className="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-neutral-900 dark:text-neutral-100"
             placeholder="exemple@mail.com"
             autoComplete="email"
           />
@@ -91,7 +91,7 @@ export default function Register() {
             <input
               {...register("password")}
               type={showPwd ? "text" : "password"}
-              className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 pr-10"
+              className="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 pr-10 text-neutral-900 dark:text-neutral-100"
               autoComplete="new-password"
             />
             <button
@@ -125,7 +125,7 @@ export default function Register() {
             <input
               {...register("confirm")}
               type={showPwd ? "text" : "password"}
-              className="w-full rounded border border-neutral-700 bg-neutral-900 px-3 py-2 pr-10"
+              className="w-full rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 pr-10 text-neutral-900 dark:text-neutral-100"
               autoComplete="new-password"
             />
             <button
@@ -154,6 +154,7 @@ export default function Register() {
         </div>
 
         <button
+          type="submit"
           disabled={isSubmitting}
           className="w-full rounded bg-neutral-900 dark:bg-white px-4 py-2 font-medium text-white dark:text-black hover:opacity-90 disabled:opacity-60"
         >

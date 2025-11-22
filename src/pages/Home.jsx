@@ -61,7 +61,7 @@ export default function Home() {
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight 
                 @             text-neutral-900 dark:text-white mb-6">
-                  Dénonce, <br />
+                  Alerte, <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r 
                                     from-violet-700 to-amber-600 
                                     dark:from-violet-300 to-amber-300">
