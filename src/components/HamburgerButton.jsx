@@ -4,6 +4,7 @@ import React from "react";
 export default function HamburgerButton({ onClick, className = "", label = "Ouvrir le menu", isOpen = false }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={label}
       className={[

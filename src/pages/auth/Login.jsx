@@ -151,6 +151,7 @@ export default function Login() {
         </div>
 
         <button
+          type="submit"
           disabled={isSubmitting}
           className="w-full rounded bg-neutral-900 dark:bg-white px-4 py-2 font-medium text-white dark:text-black hover:opacity-90 disabled:opacity-60"
         >
