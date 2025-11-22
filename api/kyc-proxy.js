@@ -1,18 +1,13 @@
 // api/kyc-proxy.js
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
+  const method = req.method;
   const ctype = (req.headers["content-type"] || "").toLowerCase();
   const isMultipart = ctype.startsWith("multipart/form-data");
 
   try {
-    // 1) CAS MULTIPART = SUBMIT KYC (avec fichier)
-    if (isMultipart) {
-      // On lit tout le body dans un Buffer
+    // 1) SUBMIT KYC (upload fichier) → multipart/form-data
+    if (method === "POST" && isMultipart) {
       const chunks = [];
       for await (const chunk of req) {
         chunks.push(chunk);
@@ -43,22 +38,15 @@ export default async function handler(req, res) {
       return res.send(Buffer.from(arrayBuf));
     }
 
-    // 2) CAS JSON = cancel / signed-url
-    const rawBody =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body = rawBody ? JSON.parse(rawBody || "{}") : {};
-    const action = body.action;
+    // 2) CANCEL KYC sans body → DELETE direct
+    if (method === "DELETE") {
+      const headers = {
+        Accept: "application/json",
+      };
+      if (req.headers.authorization) {
+        headers.Authorization = req.headers.authorization;
+      }
 
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    if (req.headers.authorization) {
-      headers.Authorization = req.headers.authorization;
-    }
-
-    // 2.a) Annuler le KYC
-    if (action === "cancel") {
       const upstream = await fetch("https://dohi.chat-mabelle.com/api/kyc", {
         method: "DELETE",
         headers,
@@ -74,39 +62,90 @@ export default async function handler(req, res) {
       return res.status(upstream.status).json(data);
     }
 
-    // 2.b) Signed URL
-    if (action === "signed-url") {
-      const { path, ttl } = body;
-      if (!path) {
-        return res
-          .status(400)
-          .json({ message: "path requis pour signed-url" });
+    // 3) JSON (signed-url ou éventuellement cancel via JSON)
+    if (method === "POST" && !isMultipart) {
+      let raw = "";
+      for await (const chunk of req) {
+        raw += chunk;
       }
 
-      const upstream = await fetch(
-        "https://dohi.chat-mabelle.com/api/kyc/signed-url",
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ path, ttl }),
+      let body = {};
+      if (raw) {
+        try {
+          body = JSON.parse(raw);
+        } catch (e) {
+          console.error("KYC proxy JSON parse error:", e);
+          return res.status(400).json({ message: "JSON invalide", raw });
         }
-      );
-
-      const text = await upstream.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { raw: text };
       }
-      return res.status(upstream.status).json(data);
+
+      const { action, path, ttl, cancel } = body;
+
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (req.headers.authorization) {
+        headers.Authorization = req.headers.authorization;
+      }
+
+      // 3.a) Signed URL
+      // - soit action === "signed-url"
+      // - soit pas d'action mais un path est présent (ton cas actuel)
+      if (action === "signed-url" || (!action && path)) {
+        if (!path) {
+          return res
+            .status(400)
+            .json({ message: "path requis pour signed-url" });
+        }
+
+        const upstream = await fetch(
+          "https://dohi.chat-mabelle.com/api/kyc/signed-url",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ path, ttl }),
+          }
+        );
+
+        const text = await upstream.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { raw: text };
+        }
+        return res.status(upstream.status).json(data);
+      }
+
+      // 3.b) Cancel via JSON éventuel
+      if (action === "cancel" || cancel === true) {
+        const upstream = await fetch("https://dohi.chat-mabelle.com/api/kyc", {
+          method: "DELETE",
+          headers,
+        });
+
+        const text = await upstream.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { raw: text };
+        }
+        return res.status(upstream.status).json(data);
+      }
+
+      // 3.c) Rien ne match → on renvoie un message explicite
+      return res.status(400).json({
+        message:
+          "Requête KYC JSON non reconnue. Pour signed-url: body avec { path, ttl? }. Pour cancel: { action:'cancel' } ou { cancel:true }.",
+        received: body,
+      });
     }
 
-    // 2.c) Action inconnue
-    return res.status(400).json({
-      message:
-        "action invalide (multipart = submit KYC, JSON: cancel / signed-url)",
-    });
+    // 4) Method non gérée
+    res.setHeader("Allow", "POST, DELETE");
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
     console.error("Proxy kyc error:", error);
     return res.status(500).json({
