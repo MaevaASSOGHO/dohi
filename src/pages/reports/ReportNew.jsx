@@ -249,13 +249,13 @@ export default function ReportNew() {
           }
         }
 
-        try {
-          await api.post("/debug/make-notif", {
-            user_id: me?.id,
-            kind: "signalement envoyé",
-            data: { reportId, caseId, title, status: "in_review" },
-          });
-        } catch {}
+        // try {
+        //   await api.post("/debug/make-notif", {
+        //     user_id: me?.id,
+        //     kind: "signalement envoyé",
+        //     data: { reportId, caseId, title, status: "in_review" },
+        //   });
+        // } catch {}
 
         return { reportId };
       }
@@ -318,13 +318,13 @@ export default function ReportNew() {
         }
       }
 
-      try {
-        await api.post("/debug/make-notif", {
-          user_id: me?.id,
-          kind: "signalement envoyé",
-          data: { reportId, caseId, title, status: "in_review" },
-        });
-      } catch {}
+      // try {
+      //   await api.post("/debug/make-notif", {
+      //     user_id: me?.id,
+      //     kind: "signalement envoyé",
+      //     data: { reportId, caseId, title, status: "in_review" },
+      //   });
+      // } catch {}
 
       return { reportId };
     },

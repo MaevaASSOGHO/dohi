@@ -173,25 +173,20 @@ export function uploadEvidenceViaApi(reportId, fileObj) {
     : "doc";
   form.append("type", evType);
 
+  // DEV : tu peux appeler Laravel direct
   if (import.meta.env.DEV) {
-    // Dev : direct backend Laravel
-    return api.post(`/api/reports/${reportId}/evidence`, form, {
+    return api.post(`/reports/${reportId}/evidence`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   }
 
-  // Prod : proxy Vercel
+  // PROD : on passe par le proxy Vercel
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  return axios.post(
-    `/api/reports-evidence-proxy?reportId=${encodeURIComponent(reportId)}`,
-    form,
-    {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      // NE PAS fixer Content-Type ici : Axios le mettra avec la bonne boundary
-    }
-  );
+  return axios.post(`/api/reports-evidence-proxy?reportId=${reportId}`, form, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 }
 
 // --- Vote d'un report (utile / pas utile) ---

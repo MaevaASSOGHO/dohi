@@ -1,55 +1,55 @@
 // api/reports-evidence-proxy.js
 
 export default async function handler(req, res) {
+  // On n'accepte que POST
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  // On attend un reportId dans la query : /api/reports-evidence-proxy?reportId=XXX
-  const reportId = req.query.reportId || req.query.id;
-  if (!reportId) {
-    return res.status(400).json({ message: "reportId requis" });
-  }
-
   try {
-    // On reconstruit les headers minimums pour le backend
+    // reportId passé en query : /api/reports-evidence-proxy?reportId=16
+    const { reportId } = req.query || {};
+    if (!reportId) {
+      return res.status(400).json({ message: "reportId manquant dans la query" });
+    }
+
+    // On forward TOUT le body (FormData) tel quel vers Laravel
+    const targetUrl = `https://dohi.chat-mabelle.com/api/reports/${encodeURIComponent(
+      reportId
+    )}/evidence`;
+
+    // On reconstruit les headers utiles vers le backend
     const headers = {
-      // Très important : on reprend exactement le content-type
-      // (avec la boundary générée par Axios/FormData)
-      "Content-Type": req.headers["content-type"] || "application/octet-stream",
       Accept: "application/json",
+      "Content-Type": req.headers["content-type"] || "application/octet-stream",
     };
 
-    // On forward le Bearer token si présent
     if (req.headers.authorization) {
       headers.Authorization = req.headers.authorization;
     }
 
-    const url = `https://dohi.chat-mabelle.com/api/reports/${encodeURIComponent(
-      reportId
-    )}/evidence`;
-
-    // On envoie le flux brut (multipart/form-data) au backend Laravel
-    const upstream = await fetch(url, {
+    // IMPORTANT : on passe req (stream) comme body → on ne touche pas au FormData
+    const upstream = await fetch(targetUrl, {
       method: "POST",
       headers,
-      body: req, // on ne touche PAS au body, on stream tel quel
+      body: req,
     });
 
+    const status = upstream.status;
     const contentType =
       upstream.headers.get("content-type") || "application/json";
-    const status = upstream.status;
     const arrayBuf = await upstream.arrayBuffer();
+    const buf = Buffer.from(arrayBuf);
 
     res.status(status);
     res.setHeader("content-type", contentType);
-    res.send(Buffer.from(arrayBuf));
+    return res.send(buf);
   } catch (error) {
-    console.error("Proxy reports-evidence error:", error);
-    res.status(500).json({
-      message: "Proxy error",
-      error: error.message || String(error),
+    console.error("reports-evidence-proxy error:", error);
+    return res.status(500).json({
+      message: "Proxy error (reports-evidence)",
+      error: error?.message || String(error),
     });
   }
 }
