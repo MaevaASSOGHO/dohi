@@ -597,6 +597,40 @@ export default function ReportNew() {
             
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
+              {scenario === "phone" && (
+                <TextField
+                  label="Numéro de téléphone"
+                  value={phone}
+                  onCommit={(v) => setPhone(v)}
+                  placeholder="+225 01 23 45 67"
+                />
+              )}
+              {scenario === "person" && (
+                <TextField
+                  label="Nom complet"
+                  value={fullName}
+                  onCommit={(v) => setFullName(v)}
+                  placeholder="K. D. N'Guessan"
+                />
+              )}
+              {scenario === "vehicle" && (
+                <TextField
+                  label="Plaque d'immatriculation"
+                  value={plate}
+                  onCommit={(v) => setPlate(v)}
+                  placeholder="1234-HJ-01"
+                />
+              )}
+              {scenario === "company" && (
+                <TextField
+                  label="Entreprise / Marque"
+                  value={brand}
+                  onCommit={(v) => setBrand(v)}
+                  placeholder="Orange CI"
+                />
+              )}
+
               <div>
                 <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">
                   Type d'arnaque
@@ -632,39 +666,6 @@ export default function ReportNew() {
                 <TextField value={date} onCommit={(v) => setDate(v)} type="date" />
               </div>
             </div>
-
-            {scenario === "phone" && (
-              <TextField
-                label="Numéro de téléphone"
-                value={phone}
-                onCommit={(v) => setPhone(v)}
-                placeholder="+225 01 23 45 67"
-              />
-            )}
-            {scenario === "person" && (
-              <TextField
-                label="Nom complet"
-                value={fullName}
-                onCommit={(v) => setFullName(v)}
-                placeholder="K. D. N'Guessan"
-              />
-            )}
-            {scenario === "vehicle" && (
-              <TextField
-                label="Plaque d'immatriculation"
-                value={plate}
-                onCommit={(v) => setPlate(v)}
-                placeholder="1234-HJ-01"
-              />
-            )}
-            {scenario === "company" && (
-              <TextField
-                label="Entreprise / Marque"
-                value={brand}
-                onCommit={(v) => setBrand(v)}
-                placeholder="Orange CI"
-              />
-            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <TextField
