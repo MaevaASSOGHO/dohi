@@ -590,20 +590,11 @@ export default function ReportNew() {
         </Step>
       )}
 
-
-
       {/* Step 3 — Dossier : informations principales */}
       {step === 3 && (
         <Step n={3} title="Dossier : informations principales">
           <div className="grid gap-3">
-            <TextField
-              label="Titre du dossier"
-              value={title}
-              onCommit={(v) => setTitle(v)}
-              maxLength={MAX_TITLE}
-              placeholder="Nom d’entreprise, numéro de téléphone, plaque…"
-              disabled={true} // Ajout de cette ligne pour rendre le champ en lecture seule
-            />
+            
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
