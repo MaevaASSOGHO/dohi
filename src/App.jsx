@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import "./App.css";
 import HamburgerButton from "./components/HamburgerButton";
-import { api, logoutViaApi } from "./lib/api";
+import { api } from "./lib/api";
 
 /* Auth réactive (token localStorage + events cross-tab) */
 function useAuthReactive() {
@@ -160,20 +160,17 @@ useEffect(() => {
   const CONTENT_MAX_W = "max-w-[1200px]";
 
   async function handleLogout() {
-    try {
-      await logoutViaApi();
-    } catch (e) {
-      // on ignore, l'important c'est de nettoyer côté front
-    }
-
+    // 1) On supprime le token local
     try {
       localStorage.removeItem("token");
     } catch {}
 
+    // 2) On notifie ton hook useAuthReactive
     window.dispatchEvent(new Event("auth:changed"));
+
+    // 3) On revient sur la page de connexion
     navigate("/login", { replace: true });
   }
-
 
   return (
     <div className="min-h-dvh w-full bg-white text-neutral-900 dark:bg-black dark:text-neutral-100">
@@ -191,7 +188,7 @@ useEffect(() => {
             
           </div>
 
-          {/* Logo centré (légèrement plus grand) */}
+          {/* Logo centré */}
           <div className="flex items-center justify-center h-full overflow-hidden">
             <Link to="/feed" aria-label="Aller à l’accueil" className="block">
               <img
@@ -210,7 +207,7 @@ useEffect(() => {
       {sidebarOpen && (
         <div
           className="fixed inset-x-0 bottom-0 z-30 bg-white/70 dark:bg-black/40 backdrop-blur pointer-events-none"
-          style={{ top: '5rem' }} // ≈ h-20 (80px) pour coller au nouveau header
+          style={{ top: '5rem' }} 
         />
       )}
 
@@ -234,6 +231,7 @@ useEffect(() => {
                 <Link
                   to="/login"
                   type="button"
+                  onClick={() => setSidebarOpen(false)}
                   className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
                               ring-1 ring-neutral-300 dark:ring-neutral-700
                               hover:bg-neutral-100 dark:hover:bg-neutral-800/50
@@ -245,7 +243,10 @@ useEffect(() => {
               ) : (
                 <button
                   type="button" 
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    setSidebarOpen(false);
+                  }}
                   className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
                               ring-1 ring-neutral-300 dark:ring-neutral-700
                               hover:bg-neutral-100 dark:hover:bg-neutral-800/50

@@ -1,5 +1,4 @@
 import React from "react";
-import { logoutViaApi, api  } from "../lib/api"; 
 
 /* Icônes (SVG inline, teintées via Tailwind) */
 const IconReport = ({ className = "h-6 w-6" }) => (
@@ -136,24 +135,28 @@ export default function Home() {
 
                 {/* Actions Principales */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
-                    <IconReport className="h-8 w-8 text-violet-300 mb-3" />
-                    <div className="text-base font-semibold text-white mb-2">
-                      Signaler un cas
+                  <Link to="/reports/new" className="block">
+                    <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300 cursor-pointer">
+                      <IconReport className="h-8 w-8 text-violet-300 mb-3" />
+                      <div className="text-base font-semibold text-white mb-2">
+                        Signaler un cas
+                      </div>
+                      <p className="text-sm text-neutral-300 leading-relaxed">
+                        Ajoute des preuves pour protéger la communauté.
+                      </p>
                     </div>
-                    <p className="text-sm text-neutral-300 leading-relaxed">
-                      Ajoute des preuves pour protéger la communauté.
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
-                    <IconSearch className="h-8 w-8 text-amber-300 mb-3" />
-                    <div className="text-base font-semibold text-white mb-2">
-                      Vérifier un profil
-                    </div>
+                  </Link>
+                  <Link to="/verify" className="block">
+                    <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300 cursor-pointer">
+                      <IconSearch className="h-8 w-8 text-amber-300 mb-3" />
+                      <div className="text-base font-semibold text-white mb-2">
+                        Vérifier un profil
+                      </div>
                     <p className="text-sm text-neutral-300 leading-relaxed">
                       Recherche par nom, téléphone, IBAN, pseudo…
                     </p>
-                  </div>
+                    </div>
+                  </Link>
                   <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
                     <IconBell className="h-8 w-8 text-amber-400 mb-3" />
                     <div className="text-base font-semibold text-white mb-2">

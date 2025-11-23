@@ -491,30 +491,7 @@ export default function ReportNew() {
           )}
         </Step>
       )}
-
-      {/* Step 1 — Scénario */}
-      {step === 1 && (
-        <Step n={1} title="Que souhaitez-vous signaler ?">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {SCENARIOS.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setScenario(s.key)}
-                className={`rounded-xl border px-3 py-3 text-sm transition-colors ${
-                  scenario === s.key
-                    ? "border-violet-400 bg-violet-50 text-violet-700 dark:border-white dark:bg-transparent dark:text-neutral-100"
-                    : "border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-900 dark:text-neutral-200"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-          <NextPrev canNext={!!scenario} onNext={() => setStep(2)} />
-        </Step>
-      )}
-
+       
       {/* Step 2 — Pré-check doublons */}
       {step === 2 && (
         <Step n={2} title="Rechercher des dossiers existants">
@@ -576,6 +553,30 @@ export default function ReportNew() {
           <NextPrev canNext={true} onNext={() => setStep(3)} />
         </Step>
       )}
+      
+      {/* Step 1 — Scénario */}
+      {step === 1 && (
+        <Step n={1} title="Que souhaitez-vous signaler ?">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {SCENARIOS.map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setScenario(s.key)}
+                className={`rounded-xl border px-3 py-3 text-sm transition-colors ${
+                  scenario === s.key
+                    ? "border-violet-400 bg-violet-50 text-violet-700 dark:border-white dark:bg-transparent dark:text-neutral-100"
+                    : "border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-900 dark:text-neutral-200"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <NextPrev canNext={!!scenario} onNext={() => setStep(2)} />
+        </Step>
+      )}
+
 
       {/* Step 3 — Dossier : informations principales */}
       {step === 3 && (
