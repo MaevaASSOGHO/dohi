@@ -12,7 +12,6 @@ export default async function handler(req, res) {
       "Content-Type": "application/json",
     };
 
-    // On propage le Bearer token si présent
     if (req.headers.authorization) {
       headers.Authorization = req.headers.authorization;
     }
