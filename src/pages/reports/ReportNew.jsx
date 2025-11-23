@@ -491,10 +491,10 @@ export default function ReportNew() {
           )}
         </Step>
       )}
-       
-      {/* Step 2 — Pré-check doublons */}
-      {step === 2 && (
-        <Step n={2} title="Rechercher des dossiers existants">
+    
+      {/* Step 1 — Pré-check doublons (anciennement étape 2) */}
+      {step === 1 && (
+        <Step n={1} title="Rechercher des dossiers existants">
           <p className="text-sm mb-2 text-neutral-700 dark:text-neutral-300">
             Avant de créer un nouveau dossier, vérifiez s’il n’existe pas déjà
             (y compris variantes d’orthographe).
@@ -550,13 +550,13 @@ export default function ReportNew() {
                 Aucun dossier trouvé.
               </div>
             ))}
-          <NextPrev canNext={true} onNext={() => setStep(3)} />
+          <NextPrev canNext={true} onNext={() => setStep(2)} />
         </Step>
       )}
-      
-      {/* Step 1 — Scénario */}
-      {step === 1 && (
-        <Step n={1} title="Que souhaitez-vous signaler ?">
+
+      {/* Step 2 — Scénario (anciennement étape 1) */}
+      {step === 2 && (
+        <Step n={2} title="Que souhaitez-vous signaler ?">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {SCENARIOS.map((s) => (
               <button
@@ -573,9 +573,10 @@ export default function ReportNew() {
               </button>
             ))}
           </div>
-          <NextPrev canNext={!!scenario} onNext={() => setStep(2)} />
+          <NextPrev canNext={!!scenario} onNext={() => setStep(3)} />
         </Step>
       )}
+
 
 
       {/* Step 3 — Dossier : informations principales */}

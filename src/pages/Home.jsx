@@ -147,7 +147,7 @@ export default function Home() {
                       </p>
                     </div>
                   </Link>
-                  <Link to="/verify" className="block">
+                  <Link to="/discover" className="block">
                     <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300 cursor-pointer">
                       <IconSearch className="h-8 w-8 text-amber-300 mb-3" />
                       <div className="text-base font-semibold text-white mb-2">
@@ -158,15 +158,17 @@ export default function Home() {
                     </p>
                     </div>
                   </Link>
-                  <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
-                    <IconBell className="h-8 w-8 text-amber-400 mb-3" />
-                    <div className="text-base font-semibold text-white mb-2">
-                      Recevoir des alertes
+                  <Link to="/notifications/Notifications" className="block">
+                    <div className="rounded-xl bg-neutral-900/60 p-5 border border-neutral-200 dark:border-neutral-800 hover:border-violet-500/30 transition-all duration-300">
+                      <IconBell className="h-8 w-8 text-amber-400 mb-3" />
+                      <div className="text-base font-semibold text-white mb-2">
+                        Recevoir des alertes
+                      </div>
+                      <p className="text-sm text-neutral-300 leading-relaxed">
+                        Suis l&apos;évolution d&apos;un cas et les récidives.
+                      </p>
                     </div>
-                    <p className="text-sm text-neutral-300 leading-relaxed">
-                      Suis l&apos;évolution d&apos;un cas et les récidives.
-                    </p>
-                  </div>
+                  </Link>
                 </div>
               </div>
 
