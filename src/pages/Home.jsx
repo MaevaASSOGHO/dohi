@@ -1,5 +1,5 @@
 import React from "react";
-import { logoutViaApi, api  } from "./lib/api"; 
+import { logoutViaApi, api  } from "../lib/api"; 
 
 /* Icônes (SVG inline, teintées via Tailwind) */
 const IconReport = ({ className = "h-6 w-6" }) => (
