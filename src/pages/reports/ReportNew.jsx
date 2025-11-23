@@ -172,6 +172,19 @@ export default function ReportNew() {
   const [city, setCity] = useState("");
   const [date, setDate] = useState("");
 
+  // Effet pour mettre à jour automatiquement le titre selon le scénario
+  useEffect(() => {
+    if (scenario === "phone" && phone) {
+      setTitle(phone);
+    } else if (scenario === "person" && fullName) {
+      setTitle(fullName);
+    } else if (scenario === "vehicle" && plate) {
+      setTitle(plate);
+    } else if (scenario === "company" && brand) {
+      setTitle(brand);
+    }
+  }, [scenario, phone, fullName, plate, brand]);
+
   // ——— Step 4: preuves (preview local)
   const [files, setFiles] = useState([]); // [{file, name, size, mime, localUrl}]
   const handlePickFiles = (e) => {
@@ -589,20 +602,21 @@ export default function ReportNew() {
               onCommit={(v) => setTitle(v)}
               maxLength={MAX_TITLE}
               placeholder="Nom d’entreprise, numéro de téléphone, plaque…"
+              disabled={true} // Ajout de cette ligne pour rendre le champ en lecture seule
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs mb-1 text-neutral-600 dark:text-neutral-400">
-                  Type d’arnaque
+                  Type d'arnaque
                 </label>
                 <select
                   value={scamType}
                   onChange={(e) => setScamType(e.target.value)}
                   className="w-full rounded border px-3 py-2 text-sm
-                             border-neutral-300 dark:border-neutral-700
-                             bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100
-                             focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+                            border-neutral-300 dark:border-neutral-700
+                            bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100
+                            focus:outline-none focus:ring-2 focus:ring-violet-500/40"
                 >
                   {SCAM_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -646,7 +660,7 @@ export default function ReportNew() {
             )}
             {scenario === "vehicle" && (
               <TextField
-                label="Plaque d’immatriculation"
+                label="Plaque d'immatriculation"
                 value={plate}
                 onCommit={(v) => setPlate(v)}
                 placeholder="1234-HJ-01"
