@@ -1,4 +1,5 @@
 import React from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 
 /* Icônes (SVG inline, teintées via Tailwind) */
 const IconReport = ({ className = "h-6 w-6" }) => (
