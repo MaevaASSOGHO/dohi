@@ -126,30 +126,34 @@ function ThemeToggle() {
     </button>
   );
 }
+
 export default function App() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isAuthenticated = useAuthReactive();
 
-  /* Sidebar : ouverte par défaut ≥ sm, fermée en mobile + écoute des changements */
-  const [isSmall, setIsSmall] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 639px)").matches : false
+  /* État pour le menu mobile */
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 1023px)").matches : false
   );
   const [sidebarOpen, setSidebarOpen] = useState(false);
-useEffect(() => {
-  const mql = window.matchMedia("(max-width: 639px)");
-  const onChange = () => {
-    setIsSmall(mql.matches);
-    // Supprimé le comportement auto : ne change plus l'état sidebarOpen automatiquement
-  };
-  mql.addEventListener?.("change", onChange);
-  return () => mql.removeEventListener?.("change", onChange);
-}, []);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)");
+    const onChange = () => {
+      setIsMobile(mql.matches);
+      if (!mql.matches) {
+        setSidebarOpen(false); // Fermer le sidebar quand on passe en desktop
+      }
+    };
+    mql.addEventListener?.("change", onChange);
+    return () => mql.removeEventListener?.("change", onChange);
+  }, []);
 
   const nav = [
     { to: "/", label: "Accueil", icon: IconFeed },
     { to: "/discover", label: "Découvrir", icon: IconDiscover },
-    { to: "/feed", label: "Fil d’actualité", icon: IconFeed },
+    { to: "/feed", label: "Fil d'actualité", icon: IconFeed },
     { to: "/notifications/Notifications", label: "Notifications", icon: IconBell },
     { to: "/reports/new", label: "Nouveau signalement", icon: IconReport },
     { to: "/kyc", label: "Vérifier mon identité", icon: IconVerifyId },
@@ -160,15 +164,10 @@ useEffect(() => {
   const CONTENT_MAX_W = "max-w-[1200px]";
 
   async function handleLogout() {
-    // 1) On supprime le token local
     try {
       localStorage.removeItem("token");
     } catch {}
-
-    // 2) On notifie ton hook useAuthReactive
     window.dispatchEvent(new Event("auth:changed"));
-
-    // 3) On revient sur la page de connexion
     navigate("/login", { replace: true });
   }
 
@@ -182,120 +181,206 @@ useEffect(() => {
         role="banner"
       >
         <div className="mx-auto max-w-[1200px] px-4 h-14 flex items-center justify-between">
-          {/* Hamburger dans le header */}
-          <div className="flex items-center gap-3">
-            <HamburgerButton onClick={() => setSidebarOpen(v => !v)} aria-label="Ouvrir/fermer le menu" />
-            
-          </div>
-
-          {/* Logo centré */}
-          <div className="flex items-center justify-center h-full overflow-hidden">
-            <Link to="/feed" aria-label="Aller à l’accueil" className="block">
+          {/* Logo + Navigation Desktop */}
+          <div className="flex items-center gap-8">
+            {/* Logo */}
+            <Link to="/feed" aria-label="Aller à l'accueil" className="block">
               <img
                 src="/Dohi-logo2.png"
                 alt="OS Scammer"
                 className="block h-auto max-h-full w-[110px] sm:w-[140px] object-contain"
               />
             </Link>
-          </div>
 
-          <div className="flex items-center gap-3 mr-4 sm:mr-6">
-           <ThemeToggle />
-          </div>
-        </div>
-      </header>
-      {sidebarOpen && (
-        <div
-          className="fixed inset-x-0 bottom-0 z-30 bg-white/70 dark:bg-black/40 backdrop-blur pointer-events-none"
-          style={{ top: '5rem' }} 
-        />
-      )}
-
-      {/* SIDEBAR EN SLIDE-DOWN (depuis le haut, sous le header) */}
-      <aside
-        className={[
-          "fixed left-0 top-0 z-40 w-full",
-          "transition-transform duration-300 ease-out origin-top",
-          // descend jusque sous le header (≈ 3.5rem mobile, 4rem sm+)
-          sidebarOpen ? "translate-y-16 sm:translate-y-20" : "-translate-y-full",
-        ].join(" ")}
-        aria-label="Menu latéral"
-      >
-        <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8">
-          <div className="rounded-b-xl border-x border-b backdrop-blur
-                          bg-violet-100/90 dark:bg-neutral-950/90
-                          border-neutral-200/70 dark:border-neutral-800/70">
-            {/* Bandeau top interne (login/logout) */}
-            <div className="flex items-center gap-2 px-3 py-3 border-b  border-neutral-200/60 dark:border-neutral-800/60">
-              {!isAuthenticated ? (
-                <Link
-                  to="/login"
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
-                              ring-1 ring-neutral-300 dark:ring-neutral-700
-                              hover:bg-neutral-100 dark:hover:bg-neutral-800/50
-                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
-                              transition"
-                              aria-label="Se connecter">
-                  <IconLogin /><span>Se connecter</span>
-                </Link>
-              ) : (
-                <button
-                  type="button" 
-                  onClick={() => {
-                    handleLogout();
-                    setSidebarOpen(false);
-                  }}
-                  className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
-                              ring-1 ring-neutral-300 dark:ring-neutral-700
-                              hover:bg-neutral-100 dark:hover:bg-neutral-800/50
-                              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
-                              transition"
-                              aria-label="Se déconnecter"
-                >
-                  <span>Se déconnecter</span>
-                </button>
-              )}
-            </div>
-
-            {/* Navigation */}
-            <nav id="sidebar-nav" className="py-2"role="navigation" aria-label="Navigation principale">
-              <ul className="space-y-1">
+            {/* Navigation Desktop - cachée sur mobile */}
+            {!isMobile && (
+              <nav className="hidden lg:flex items-center gap-1" role="navigation" aria-label="Navigation principale">
                 {nav.map((item) => {
                   const Active = pathname === item.to;
                   const Icon = item.icon;
                   const classes = [
-                    "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
+                    "group flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm font-medium",
                     Active 
-                      ? "ring-1 bg-neutral-200/70 ring-neutral-300 dark:bg-neutral-800/70 dark:ring-neutral-700"
-                      : "hover:bg-neutral-100 dark:hover:bg-neutral-900/60",
+                      ? "ring-1 bg-white/20 ring-white/30 text-white"
+                      : "text-white/80 hover:text-white hover:bg-white/10",
                   ].join(" ");
                   return (
-                    <li key={item.to}>
+                    <div key={item.to}>
                       {item.external ? (
                         <a href={item.to} target="_blank" rel="noopener noreferrer" className={classes}>
-                          <Icon className="h-6 w-6 shrink-0" />
-                          <span className="text-sm">{item.label}</span>
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span>{item.label}</span>
                         </a>
                       ) : (
-                        <Link to={item.to} className={classes} onClick={() => setSidebarOpen(false)}>
-                          <Icon className="h-6 w-6 shrink-0" />
-                          <span className="text-sm">{item.label}</span>
+                        <Link to={item.to} className={classes}>
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span>{item.label}</span>
                         </Link>
                       )}
-                    </li>
+                    </div>
                   );
                 })}
-              </ul>
-            </nav>
+              </nav>
+            )}
+          </div>
+
+          {/* Côté droit du header */}
+          <div className="flex items-center gap-3">
+            {/* Hamburger seulement sur mobile/tablette */}
+            {isMobile && (
+              <HamburgerButton 
+                onClick={() => setSidebarOpen(v => !v)} 
+                aria-label="Ouvrir/fermer le menu" 
+              />
+            )}
+
+            {/* Boutons de connexion/déconnexion et thème sur desktop */}
+            {!isMobile && (
+              <div className="flex items-center gap-3">
+                {!isAuthenticated ? (
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-xl 
+                                border border-white/30 text-white
+                                bg-white/10 backdrop-blur
+                                hover:bg-white/20
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60
+                                transition"
+                    aria-label="Se connecter"
+                  >
+                    <IconLogin className="h-4 w-4" />
+                    <span>Se connecter</span>
+                  </Link>
+                ) : (
+                  <button
+                    type="button" 
+                    onClick={handleLogout}
+                    className="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-xl 
+                                border border-white/30 text-white
+                                bg-white/10 backdrop-blur
+                                hover:bg-white/20
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60
+                                transition"
+                    aria-label="Se déconnecter"
+                  >
+                    <span>Se déconnecter</span>
+                  </button>
+                )}
+                <ThemeToggle />
+              </div>
+            )}
+
+            {/* Thème seulement sur mobile (le reste est dans le sidebar) */}
+            {isMobile && <ThemeToggle />}
           </div>
         </div>
-      </aside>
+      </header>
+
+      {/* Overlay pour mobile */}
+      {sidebarOpen && isMobile && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 bg-black/20 backdrop-blur pointer-events-none"
+          style={{ top: '3.5rem' }} 
+        />
+      )}
+
+      {/* SIDEBAR POUR MOBILE/TABLETTE */}
+      {isMobile && (
+        <aside
+          className={[
+            "fixed left-0 top-0 z-40 w-full",
+            "transition-transform duration-300 ease-out origin-top",
+            sidebarOpen ? "translate-y-14" : "-translate-y-full",
+          ].join(" ")}
+          aria-label="Menu latéral"
+        >
+          <div className="mx-auto max-w-[1200px] px-3 sm:px-6 md:px-8">
+            <div className="rounded-b-xl border-x border-b backdrop-blur
+                            bg-violet-100/90 dark:bg-neutral-950/90
+                            border-neutral-200/70 dark:border-neutral-800/70">
+              {/* Bandeau top interne (login/logout) */}
+              <div className="flex items-center gap-2 px-3 py-3 border-b border-neutral-200/60 dark:border-neutral-800/60">
+                {!isAuthenticated ? (
+                  <Link
+                    to="/login"
+                    onClick={() => setSidebarOpen(false)}
+                    className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
+                                ring-1 ring-neutral-300 dark:ring-neutral-700
+                                hover:bg-neutral-100 dark:hover:bg-neutral-800/50
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
+                                transition"
+                    aria-label="Se connecter"
+                  >
+                    <IconLogin />
+                    <span>Se connecter</span>
+                  </Link>
+                ) : (
+                  <button
+                    type="button" 
+                    onClick={() => {
+                      handleLogout();
+                      setSidebarOpen(false);
+                    }}
+                    className="ml-auto inline-flex items-center gap-2 text-sm px-2 py-1 rounded-md 
+                                ring-1 ring-neutral-300 dark:ring-neutral-700
+                                hover:bg-neutral-100 dark:hover:bg-neutral-800/50
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60
+                                transition"
+                    aria-label="Se déconnecter"
+                  >
+                    <span>Se déconnecter</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Navigation Mobile */}
+              <nav id="sidebar-nav" className="py-2" role="navigation" aria-label="Navigation principale">
+                <ul className="space-y-1">
+                  {nav.map((item) => {
+                    const Active = pathname === item.to;
+                    const Icon = item.icon;
+                    const classes = [
+                      "group flex items-center gap-3 px-3 py-2 mx-2 rounded-lg transition",
+                      Active 
+                        ? "ring-1 bg-neutral-200/70 ring-neutral-300 dark:bg-neutral-800/70 dark:ring-neutral-700"
+                        : "hover:bg-neutral-100 dark:hover:bg-neutral-900/60",
+                    ].join(" ");
+                    return (
+                      <li key={item.to}>
+                        {item.external ? (
+                          <a 
+                            href={item.to} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className={classes}
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            <Icon className="h-6 w-6 shrink-0" />
+                            <span className="text-sm">{item.label}</span>
+                          </a>
+                        ) : (
+                          <Link 
+                            to={item.to} 
+                            className={classes} 
+                            onClick={() => setSidebarOpen(false)}
+                          >
+                            <Icon className="h-6 w-6 shrink-0" />
+                            <span className="text-sm">{item.label}</span>
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </aside>
+      )}
 
       {/* CONTENU (passe sous le header) */}
-      <div className={`pt-20 sm:pt-24 ${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
-        <main className="mx-auto max-w-[1200px] px-4 py-6"role="main" aria-label="Contenu principal">
+      <div className={`pt-14 lg:pt-16 ${CONTENT_MAX_W} mx-auto px-3 sm:px-6 md:px-8`}>
+        <main className="mx-auto max-w-[1200px] px-4 py-6" role="main" aria-label="Contenu principal">
           <div className="outlet-stretcher min-w-0">
             <Outlet />
           </div>
