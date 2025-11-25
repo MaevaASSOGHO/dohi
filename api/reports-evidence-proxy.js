@@ -9,31 +9,35 @@ export default async function handler(req, res) {
   try {
     const { reportId } = req.query || {};
     if (!reportId) {
-      return res.status(400).json({ message: "reportId manquant dans la query" });
+      return res
+        .status(400)
+        .json({ message: "reportId manquant dans la query" });
     }
 
     const targetUrl = `https://dohi.chat-mabelle.com/api/reports/${encodeURIComponent(
       reportId
     )}/evidence`;
 
-    // 1) On lit TOUT le body (multipart) dans un Buffer
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const bodyBuffer = Buffer.concat(chunks);
+    // 1) Lire tout le body (multipart) en Buffer
+    const bodyBuffer = await new Promise((resolve, reject) => {
+      const chunks = [];
+      req.on("data", (chunk) => chunks.push(chunk));
+      req.on("end", () => resolve(Buffer.concat(chunks)));
+      req.on("error", (err) => reject(err));
+    });
 
-    // 2) On prépare les headers vers Laravel
+    // 2) Préparer les headers vers Laravel
     const headers = {
       Accept: "application/json",
-      // On garde exactement le content-type (avec la boundary)
-      "Content-Type": req.headers["content-type"] || "application/octet-stream",
+      // On garde EXACTEMENT le content-type avec boundary
+      "Content-Type":
+        req.headers["content-type"] || "application/octet-stream",
     };
     if (req.headers.authorization) {
       headers.Authorization = req.headers.authorization;
     }
 
-    // 3) On forward vers Laravel
+    // 3) Forward vers Laravel
     const upstream = await fetch(targetUrl, {
       method: "POST",
       headers,
@@ -43,9 +47,12 @@ export default async function handler(req, res) {
     const status = upstream.status;
     const contentType =
       upstream.headers.get("content-type") || "application/json";
+
+    // 4) Lire la réponse de Laravel
     const arrayBuf = await upstream.arrayBuffer();
     const buf = Buffer.from(arrayBuf);
 
+    // Si Laravel renvoie une erreur (4xx/5xx), on renvoie quand même le body
     res.status(status);
     res.setHeader("content-type", contentType);
     return res.send(buf);

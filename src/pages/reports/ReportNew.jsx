@@ -597,7 +597,7 @@ export default function ReportNew() {
             
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              
+
               {scenario === "phone" && (
                 <TextField
                   label="Numéro de téléphone"
@@ -761,7 +761,7 @@ export default function ReportNew() {
             <div className="text-sm text-neutral-700 dark:text-neutral-300">
               Réponds brièvement : <em>Que s’est-il passé ?</em>{" "}
               <em>Quel préjudice (montant / perte) ?</em>{" "}
-              <em>As-tu contacté la police ?</em>
+              <em>Avez-vous contacté la police ?</em>
             </div>
             <TextField
               as="textarea"

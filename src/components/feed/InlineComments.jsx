@@ -61,11 +61,12 @@ export default function InlineComments({ reportId, onClose }) {
         }}
         className="flex flex-col gap-2 p-3"
       >
-        <div className="flex gap-2">
+        {/* Disposition mobile : première ligne avec select et boutons */}
+        <div className="flex gap-2 items-center">
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value)}
-            className="rounded border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/60 px-2 py-1 text-xs text-neutral-900 dark:text-neutral-100"
+            className="flex-1 rounded border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/60 px-2 py-1 text-xs text-neutral-900 dark:text-neutral-100"
           >
             {Object.entries(KIND_LABELS).map(([k, label]) => (
               <option key={k} value={k}>
@@ -74,31 +75,42 @@ export default function InlineComments({ reportId, onClose }) {
             ))}
           </select>
 
-          <textarea
-            rows={2}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={`Min. 5 caractères...`}
-            className="flex-1 rounded border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/60 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100"
-          />
-
           <button
+            type="submit"
             disabled={!canSubmit || mutation.isPending}
-            className="rounded bg-neutral-900 dark:bg-white px-3 text-sm font-medium text-white dark:text-black hover:opacity-90 disabled:opacity-60"
+            className="rounded bg-neutral-900 dark:bg-white p-2 text-white dark:text-black hover:opacity-90 disabled:opacity-60"
+            title="Envoyer le commentaire"
           >
-            Envoyer
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
           </button>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-neutral-200 dark:border-neutral-800 px-2 text-sm text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+            className="rounded border border-neutral-200 dark:border-neutral-800 p-2 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-900"
+            title="Fermer"
           >
-            Fermer
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
         </div>
+
+        {/* Deuxième ligne : textarea */}
+        <textarea
+          rows={2}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={`Min. 5 caractères...`}
+          className="w-full rounded border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/60 px-2 py-1 text-sm text-neutral-900 dark:text-neutral-100"
+        />
+
         {mutation.isError && (
-          <div className="text-xs text-red-300">Échec de l’envoi.</div>
+          <div className="text-xs text-red-300">Échec de l'envoi.</div>
         )}
       </form>
 
@@ -117,7 +129,7 @@ export default function InlineComments({ reportId, onClose }) {
         )}
         {!isLoading && comments.length === 0 && (
           <div className="p-3 text-sm text-neutral-400">
-            Aucun commentaire pour l’instant.
+            Aucun commentaire pour l'instant.
           </div>
         )}
         {comments.map((c) => (
