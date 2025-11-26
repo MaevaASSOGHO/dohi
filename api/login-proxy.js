@@ -1,5 +1,7 @@
 // api/login-proxy.js
 
+const API_BASE = process.env.API_BASE || "https://dohi.chat-mabelle.com";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -7,31 +9,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    // On choisit l'action : login (par défaut) ou forgot
-    const action = (req.query && req.query.action) || "login";
+    // Récupère l'action depuis la query ?action=login|forgot
+    const urlObj = new URL(req.url, `http://${req.headers.host}`);
+    const action = urlObj.searchParams.get("action") || "login";
 
-    // Base URL de ton backend Laravel
-    const API_BASE =
-      process.env.VITE_API_BASE ||
-      process.env.NEXT_PUBLIC_API_BASE ||
-      "https://dohi.chat-mabelle.com";
-
-    let targetUrl;
+    let targetPath = "/api/login";
     if (action === "forgot") {
-      // Mot de passe oublié
-      targetUrl = `${API_BASE.replace(/\/+$/, "")}/api/password/forgot`;
-    } else {
-      // Login classique
-      targetUrl = `${API_BASE.replace(/\/+$/, "")}/api/login`;
+      targetPath = "/api/password/forgot";
     }
 
-    // Corps JSON envoyé par le front
+    const rawBody = req.body || {};
     const payload =
-      typeof req.body === "string"
-        ? JSON.parse(req.body || "{}")
-        : req.body || {};
+      typeof rawBody === "string" ? JSON.parse(rawBody || "{}") : rawBody;
 
-    const apiResponse = await fetch(targetUrl, {
+    const upstream = await fetch(`${API_BASE}${targetPath}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -40,7 +31,7 @@ export default async function handler(req, res) {
       body: JSON.stringify(payload),
     });
 
-    const text = await apiResponse.text();
+    const text = await upstream.text();
     let data;
     try {
       data = JSON.parse(text);
@@ -48,12 +39,12 @@ export default async function handler(req, res) {
       data = { raw: text };
     }
 
-    res.status(apiResponse.status).json(data);
+    return res.status(upstream.status).json(data);
   } catch (error) {
     console.error("Proxy login/forgot error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Proxy error (login/forgot)",
-      error: error.message || String(error),
+      error: error?.message || String(error),
     });
   }
 }

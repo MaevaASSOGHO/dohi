@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import axios from "axios";
 import { api } from "../../lib/api";
 import { loginViaApi } from "../../lib/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -10,15 +11,32 @@ function ForgotPasswordModal({ open, onClose }) {
   const [err, setErr] = useState(null);
 
   async function onSubmit(values) {
-    setMsg(null); setErr(null);
+    setMsg(null);
+    setErr(null);
     try {
-      await api.post("/login-proxy?action=forgot", values);
-      setMsg("Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.");
+      // ⬇️ IMPORTANT : on passe par Vercel, pas par api.js
+      await axios.post(
+        "/api/login-proxy?action=forgot",
+        values,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      setMsg(
+        "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé."
+      );
     } catch (e) {
-      const m = e?.response?.data?.message || "Impossible d'envoyer le lien pour le moment.";
+      const m =
+        e?.response?.data?.message ||
+        "Impossible d'envoyer le lien pour le moment.";
       setErr(m);
     }
   }
+
 
   if (!open) return null;
   return (
