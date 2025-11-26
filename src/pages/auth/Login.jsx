@@ -12,7 +12,7 @@ function ForgotPasswordModal({ open, onClose }) {
   async function onSubmit(values) {
     setMsg(null); setErr(null);
     try {
-      await api.post("/password/forgot", values);
+      await api.post("/login-proxy?action=forgot", values);
       setMsg("Si un compte existe pour cet email, un lien de réinitialisation a été envoyé.");
     } catch (e) {
       const m = e?.response?.data?.message || "Impossible d'envoyer le lien pour le moment.";
