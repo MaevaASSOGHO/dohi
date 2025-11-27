@@ -344,7 +344,7 @@ export default function ReportNew() {
 
     onSuccess: ({ reportId }) => {
       alert(
-        "Votre signalement a été envoyé et va passer en examen.\nSi certains médias ne sont pas visibles, réessayez de les ajouter."
+        "Votre signalement a été envoyé et va passer en examen. Merci !"
       );
       qc.invalidateQueries({ queryKey: ["feed"] });
       qc.invalidateQueries({ queryKey: ["me"] });

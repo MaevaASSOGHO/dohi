@@ -90,7 +90,7 @@ export default function Login() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const { data } = await loginViaApi(values);
+      const { data } = await api.post("/login-proxy", values);
       const token = data?.token || data?.access_token;
       if (token) localStorage.setItem("token", token);
       window.dispatchEvent(new Event("auth:changed")); // ⬅️ met à jour la sidebar
