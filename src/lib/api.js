@@ -120,6 +120,21 @@ export async function loginViaApi(payload) {
   });
 }
 
+export async function forgotPasswordViaApi(payload) {
+  if (import.meta.env.DEV) {
+    // En dev, on tape direct Laravel comme avant
+    return api.post("/password/forgot", payload);
+  }
+
+  // En prod, on passe par le même proxy, avec action=forgot
+  return axios.post("/api/login-proxy?action=forgot", payload, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+  });
+}
+
 // Inscription helper
 export function registerViaApi(payload) {
   if (import.meta.env.DEV) {

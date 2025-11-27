@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { api } from "../../lib/api";
-import { loginViaApi } from "../../lib/api";
+import { loginViaApi, forgotPasswordViaApi } from "../../lib/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 function ForgotPasswordModal({ open, onClose }) {
@@ -14,18 +14,7 @@ function ForgotPasswordModal({ open, onClose }) {
     setMsg(null);
     setErr(null);
     try {
-      // ⬇️ IMPORTANT : on passe par Vercel, pas par api.js
-      await axios.post(
-        "/api/login-proxy?action=forgot",
-        values,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
+      await forgotPasswordViaApi(values);
       setMsg(
         "Si un compte existe pour cet email, un lien de réinitialisation a été envoyé."
       );
@@ -90,7 +79,7 @@ export default function Login() {
   const onSubmit = async (values) => {
     setServerError("");
     try {
-      const { data } = await api.post("/login-proxy", values);
+      const { data } = await loginViaApi(values);
       const token = data?.token || data?.access_token;
       if (token) localStorage.setItem("token", token);
       window.dispatchEvent(new Event("auth:changed")); // ⬅️ met à jour la sidebar
